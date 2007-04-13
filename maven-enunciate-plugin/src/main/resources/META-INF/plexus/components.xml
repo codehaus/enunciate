@@ -20,6 +20,7 @@
         <phases>
           <validate>org.codehaus.enunciate:maven-enunciate-plugin:config</validate>
           <generate-sources>org.codehaus.enunciate:maven-enunciate-plugin:generate</generate-sources>
+          <process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</process-resources>
           <compile>org.codehaus.enunciate:maven-enunciate-plugin:compile</compile>
           <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
           <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>

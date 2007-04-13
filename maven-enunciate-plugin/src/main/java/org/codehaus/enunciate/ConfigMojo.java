@@ -16,10 +16,10 @@ package org.codehaus.enunciate;
  * limitations under the License.
  */
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.artifact.Artifact;
 import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.main.Enunciate;
 import org.codehaus.enunciate.modules.DeploymentModule;
@@ -63,20 +63,6 @@ public class ConfigMojo extends AbstractMojo {
    * @readonly
    */
   private List<String> compileClasspath;
-
-  /**
-   * Whether to output verbosely.
-   *
-   * @parameter default-value="false"
-   */
-  private boolean verbose = false;
-
-  /**
-   * Whether to output very verbosely.
-   *
-   * @parameter default-value="false"
-   */
-  private boolean debug = false;
 
   /**
    * The enunciate configuration file to use.
@@ -208,9 +194,6 @@ public class ConfigMojo extends AbstractMojo {
       enunciate.setPackageDir(this.packageDir);
     }
 
-    enunciate.setVerbose(verbose);
-    enunciate.setDebug(debug);
-
     if (this.exports != null) {
       for (String exportId : this.exports.keySet()) {
         String filename = this.exports.get(exportId);
@@ -249,12 +232,10 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     public void info(String message, Object... formatArgs) {
-      super.info(message, formatArgs);
       getLog().info(String.format(message, formatArgs));
     }
 
     public void debug(String message, Object... formatArgs) {
-      super.debug(message, formatArgs);
       getLog().info(String.format(message, formatArgs));
     }
 
