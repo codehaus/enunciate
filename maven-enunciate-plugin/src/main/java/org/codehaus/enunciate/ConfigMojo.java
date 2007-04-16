@@ -158,6 +158,7 @@ public class ConfigMojo extends AbstractMojo {
       catch (Exception e) {
         throw new MojoExecutionException("Problem with enunciate config file " + this.configFile, e);
       }
+      enunciate.setConfigFile(this.configFile);
     }
     enunciate.setConfig(config);
 
@@ -236,7 +237,7 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     public void debug(String message, Object... formatArgs) {
-      getLog().info(String.format(message, formatArgs));
+      getLog().debug(String.format(message, formatArgs));
     }
 
     public void warn(String message, Object... formatArgs) {
