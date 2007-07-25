@@ -66,6 +66,8 @@ public class ConfigMojo extends AbstractMojo {
 
   /**
    * The enunciate configuration file to use.
+   * 
+   * @parameter
    */
   private File configFile = null;
 
