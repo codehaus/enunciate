@@ -16,13 +16,16 @@ package org.codehaus.enunciate;
  * limitations under the License.
  */
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.main.Enunciate;
 import org.codehaus.enunciate.modules.DeploymentModule;
+import org.codehaus.enunciate.modules.xfire.XFireDeploymentModule;
+import org.codehaus.enunciate.modules.xfire.config.ExcludeJars;
+import org.codehaus.enunciate.modules.xfire.config.WarConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,27 +49,34 @@ public class ConfigMojo extends AbstractMojo {
    * @required
    * @readonly
    */
-  private List<String> sourceDirs = Collections.emptyList();
+  private Collection<String> sourceDirs = Collections.emptyList();
 
   /**
    * @parameter expression="${plugin.artifacts}"
    * @required
    * @readonly
    */
-  private List<Artifact> pluginArtifacts;
+  private Collection<org.apache.maven.artifact.Artifact> pluginDepdendencies;
 
   /**
-   * Project classpath.
+   * Project dependencies.
    *
-   * @parameter expression="${project.compileClasspathElements}"
+   * @parameter expression="${project.artifacts}"
    * @required
    * @readonly
    */
-  private List<String> compileClasspath;
+  private Collection<org.apache.maven.artifact.Artifact> projectDependencies;
+
+  /**
+   * Project artifacts.
+   *
+   * @parameter
+   */
+  private Artifact[] artifacts;
 
   /**
    * The enunciate configuration file to use.
-   * 
+   *
    * @parameter
    */
   private File configFile = null;
@@ -145,6 +155,14 @@ public class ConfigMojo extends AbstractMojo {
    */
   protected MavenProject project;
 
+  /**
+   * Maven ProjectHelper
+   *
+   * @component
+   * @readonly
+   */
+  private MavenProjectHelper projectHelper;
+
   public void execute() throws MojoExecutionException {
     Set<File> sourceFiles = new HashSet<File>();
     for (String sourcePath : sourceDirs) {
@@ -163,18 +181,38 @@ public class ConfigMojo extends AbstractMojo {
       enunciate.setConfigFile(this.configFile);
     }
     enunciate.setConfig(config);
+    WarConfig warConfig = null;
+    for (DeploymentModule module : config.getAllModules()) {
+      if (module instanceof XFireDeploymentModule) {
+        warConfig = ((XFireDeploymentModule) module).getWarConfig();
+      }
+    }
 
-    Set<String> classpathEntries = new HashSet<String>();
-    classpathEntries.addAll(this.compileClasspath);
-    for (Artifact artifact : pluginArtifacts) {
-      File file = artifact.getFile();
-      classpathEntries.add(file.getAbsolutePath());
+    Set<org.apache.maven.artifact.Artifact> classpathEntries = new HashSet<org.apache.maven.artifact.Artifact>();
+    classpathEntries.addAll(this.projectDependencies);
+    // todo: figure out whether we need these artifacts included in the classpath.
+    // If not, we wouldn't have to declare the dependency on Enunciate in our project.
+    // If so, we get maven jars included in the generated war.... 
+    //classpathEntries.addAll(this.pluginArtifacts);
+    Iterator<org.apache.maven.artifact.Artifact> it = classpathEntries.iterator();
+    while (it.hasNext()) {
+      org.apache.maven.artifact.Artifact artifact = it.next();
+      String artifactScope = artifact.getScope();
+      if (org.apache.maven.artifact.Artifact.SCOPE_TEST.equals(artifactScope)) {
+        //remove just the test-scope artifacts from the classpath.
+        it.remove();
+      }
+      else if ((warConfig != null) && ((org.apache.maven.artifact.Artifact.SCOPE_PROVIDED.equals(artifactScope)) || (org.apache.maven.artifact.Artifact.SCOPE_PROVIDED.equals(artifactScope)))) {
+        ExcludeJars excludeJars = new ExcludeJars();
+        excludeJars.setFile(artifact.getFile());
+        warConfig.addExcludeJars(excludeJars);
+      }
     }
 
     StringBuffer classpath = new StringBuffer();
-    Iterator classpathIt = classpathEntries.iterator();
+    Iterator<org.apache.maven.artifact.Artifact> classpathIt = classpathEntries.iterator();
     while (classpathIt.hasNext()) {
-      classpath.append((String) classpathIt.next());
+      classpath.append(classpathIt.next().getFile().getAbsolutePath());
       if (classpathIt.hasNext()) {
         classpath.append(File.pathSeparatorChar);
       }
@@ -255,6 +293,7 @@ public class ConfigMojo extends AbstractMojo {
         for (org.codehaus.enunciate.main.Artifact artifact : getArtifacts()) {
           if (warArtifactId.equals(artifact.getId())) {
             warArtifact = artifact;
+            break;
           }
         }
 
@@ -273,6 +312,32 @@ public class ConfigMojo extends AbstractMojo {
         }
         else {
           getLog().warn("War artifact '" + warArtifactId + "' not found in the project...");
+        }
+      }
+
+      if (artifacts != null) {
+        for (Artifact projectArtifact : artifacts) {
+          if (projectArtifact.getEnunciateArtifactId() == null) {
+            getLog().warn("No enunciate export id specified.  Skipping project artifact...");
+            continue;
+          }
+
+          org.codehaus.enunciate.main.Artifact artifact = null;
+          for (org.codehaus.enunciate.main.Artifact enunciateArtifact : getArtifacts()) {
+            if (projectArtifact.getEnunciateArtifactId().equals(enunciateArtifact.getId())) {
+              artifact = enunciateArtifact;
+              break;
+            }
+          }
+
+          if (artifact != null) {
+            File tempExportFile = File.createTempFile(project.getArtifactId() + "-" + projectArtifact.getClassifier(), projectArtifact.getArtifactType());
+            artifact.exportTo(tempExportFile, this);
+            projectHelper.attachArtifact(project, projectArtifact.getArtifactType(), projectArtifact.getClassifier(), tempExportFile);
+          }
+          else {
+            getLog().warn("Enunciate artifact '" + projectArtifact.getEnunciateArtifactId() + "' not found in the project...");
+          }
         }
       }
     }
