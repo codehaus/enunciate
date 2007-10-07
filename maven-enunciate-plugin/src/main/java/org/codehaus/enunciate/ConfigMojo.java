@@ -24,8 +24,9 @@ import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.main.Enunciate;
 import org.codehaus.enunciate.modules.DeploymentModule;
 import org.codehaus.enunciate.modules.xfire.XFireDeploymentModule;
-import org.codehaus.enunciate.modules.xfire.config.ExcludeJars;
-import org.codehaus.enunciate.modules.xfire.config.WarConfig;
+import org.codehaus.enunciate.modules.spring_app.config.IncludeExcludeLibs;
+import org.codehaus.enunciate.modules.spring_app.config.WarConfig;
+import org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule;
 
 import java.io.File;
 import java.io.IOException;
@@ -183,8 +184,8 @@ public class ConfigMojo extends AbstractMojo {
     enunciate.setConfig(config);
     WarConfig warConfig = null;
     for (DeploymentModule module : config.getAllModules()) {
-      if (module instanceof XFireDeploymentModule) {
-        warConfig = ((XFireDeploymentModule) module).getWarConfig();
+      if (module instanceof SpringAppDeploymentModule) {
+        warConfig = ((SpringAppDeploymentModule) module).getWarConfig();
       }
     }
 
@@ -202,10 +203,10 @@ public class ConfigMojo extends AbstractMojo {
         //remove just the test-scope artifacts from the classpath.
         it.remove();
       }
-      else if ((warConfig != null) && ((org.apache.maven.artifact.Artifact.SCOPE_PROVIDED.equals(artifactScope)) || (org.apache.maven.artifact.Artifact.SCOPE_PROVIDED.equals(artifactScope)))) {
-        ExcludeJars excludeJars = new ExcludeJars();
-        excludeJars.setFile(artifact.getFile());
-        warConfig.addExcludeJars(excludeJars);
+      else if ((warConfig != null) && ((org.apache.maven.artifact.Artifact.SCOPE_PROVIDED.equals(artifactScope)) || (org.apache.maven.artifact.Artifact.SCOPE_SYSTEM.equals(artifactScope)))) {
+        IncludeExcludeLibs excludeLibs = new IncludeExcludeLibs();
+        excludeLibs.setFile(artifact.getFile());
+        warConfig.addExcludeLibs(excludeLibs);
       }
     }
 
