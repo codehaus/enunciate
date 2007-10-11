@@ -23,10 +23,9 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.main.Enunciate;
 import org.codehaus.enunciate.modules.DeploymentModule;
-import org.codehaus.enunciate.modules.xfire.XFireDeploymentModule;
+import org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule;
 import org.codehaus.enunciate.modules.spring_app.config.IncludeExcludeLibs;
 import org.codehaus.enunciate.modules.spring_app.config.WarConfig;
-import org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule;
 
 import java.io.File;
 import java.io.IOException;
@@ -128,9 +127,9 @@ public class ConfigMojo extends AbstractMojo {
   /**
    * The id of the Enunciate artifact that is to be the primary artifact for the maven project.
    *
-   * @parameter default-value="xfire.war"
+   * @parameter default-value="spring.war.file"
    */
-  private String warArtifactId = "xfire.war";
+  private String warArtifactId = "spring.war.file";
 
   /**
    * The name of the generated WAR.
