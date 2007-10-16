@@ -23,6 +23,8 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.main.Enunciate;
 import org.codehaus.enunciate.modules.DeploymentModule;
+import org.codehaus.enunciate.modules.gwt.GWTDeploymentModule;
+import org.codehaus.enunciate.modules.gwt.config.GWTApp;
 import org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule;
 import org.codehaus.enunciate.modules.spring_app.config.IncludeExcludeLibs;
 import org.codehaus.enunciate.modules.spring_app.config.WarConfig;
@@ -41,15 +43,6 @@ import java.util.*;
 public class ConfigMojo extends AbstractMojo {
 
   public static final String ENUNCIATE_STEPPER_PROPERTY = "urn:" + ConfigMojo.class.getName() + "#stepper";
-
-  /**
-   * List of directories in which reside the source code.
-   *
-   * @parameter expression="${project.compileSourceRoots}"
-   * @required
-   * @readonly
-   */
-  private Collection<String> sourceDirs = Collections.emptyList();
 
   /**
    * @parameter expression="${plugin.artifacts}"
@@ -84,28 +77,28 @@ public class ConfigMojo extends AbstractMojo {
   /**
    * The output directory for the "generate" step.
    *
-   * @parameter
+   * @parameter expression="${project.build.directory}/enunciate-generate"
    */
   private File generateDir = null;
 
   /**
    * The output directory for the "compile" step.
    *
-   * @parameter
+   * @parameter expression="${project.build.directory}/enunciate-compile"
    */
   private File compileDir = null;
 
   /**
-   * The output directory for the "compile" step.
+   * The output directory for the "build" step.
    *
-   * @parameter
+   * @parameter expression="${project.build.directory}/enunciate-build"
    */
   private File buildDir = null;
 
   /**
    * The output directory for the "package" step.
    *
-   * @parameter
+   * @parameter expression="${project.build.directory}/enunciate-package"
    */
   private File packageDir = null;
 
@@ -116,6 +109,20 @@ public class ConfigMojo extends AbstractMojo {
    * @required
    */
   private File outputDir = null;
+
+  /**
+   * Whether to add the GWT sources to the project compile sources.
+   *
+   * @parameter
+   */
+  private boolean addGWTSources = true;
+
+  /**
+   * Whether to add the GWT sources to the project compile sources.
+   *
+   * @parameter
+   */
+  private String gwtHome = null;
 
   /**
    * The exports.
@@ -165,7 +172,8 @@ public class ConfigMojo extends AbstractMojo {
 
   public void execute() throws MojoExecutionException {
     Set<File> sourceFiles = new HashSet<File>();
-    for (String sourcePath : sourceDirs) {
+    Collection<String> sourcePaths = (Collection<String>) project.getCompileSourceRoots();
+    for (String sourcePath : sourcePaths) {
       sourceFiles.add(new File(sourcePath));
     }
 
@@ -183,8 +191,10 @@ public class ConfigMojo extends AbstractMojo {
     enunciate.setConfig(config);
     WarConfig warConfig = null;
     for (DeploymentModule module : config.getAllModules()) {
-      if (module instanceof SpringAppDeploymentModule) {
-        warConfig = ((SpringAppDeploymentModule) module).getWarConfig();
+      if (!module.isDisabled()) {
+        if (module instanceof SpringAppDeploymentModule) {
+          warConfig = ((SpringAppDeploymentModule) module).getWarConfig();
+        }
       }
     }
 
@@ -272,14 +282,52 @@ public class ConfigMojo extends AbstractMojo {
       setSourceFiles(sources.toArray(new String[sources.size()]));
     }
 
+
+    @Override
+    protected List<DeploymentModule> doInit() throws EnunciateException, IOException {
+      List<DeploymentModule> modules = super.doInit();
+
+      GWTDeploymentModule gwtModule = null;
+      for (DeploymentModule module : modules) {
+        if (module instanceof GWTDeploymentModule) {
+          gwtModule = (GWTDeploymentModule) module;
+        }
+      }
+      if (gwtModule != null) {
+        if (gwtHome != null) {
+          gwtModule.setGwtHome(gwtHome);
+        }
+
+        if (addGWTSources) {
+          String clientSidePath = gwtModule.getClientSideGenerateDir().getPath();
+          getLog().info("Adding '" + clientSidePath + "' to the compile source roots.");
+          project.addCompileSourceRoot(clientSidePath);
+          String serverSidePath = gwtModule.getServerSideGenerateDir().getPath();
+          getLog().info("Adding '" + serverSidePath + "' to the compile source roots.");
+          project.addCompileSourceRoot(serverSidePath);
+          for (GWTApp gwtApp : gwtModule.getGwtApps()) {
+            File srcDir = resolvePath(gwtApp.getSrcDir());
+            String path = srcDir.getPath();
+            getLog().info("Adding '" + path + "' to the compile source roots.");
+            project.addCompileSourceRoot(path);
+          }
+        }
+      }
+
+      return modules;
+    }
+
+    @Override
     public void info(String message, Object... formatArgs) {
       getLog().info(String.format(message, formatArgs));
     }
 
+    @Override
     public void debug(String message, Object... formatArgs) {
       getLog().debug(String.format(message, formatArgs));
     }
 
+    @Override
     public void warn(String message, Object... formatArgs) {
       getLog().warn(String.format(message, formatArgs));
     }
