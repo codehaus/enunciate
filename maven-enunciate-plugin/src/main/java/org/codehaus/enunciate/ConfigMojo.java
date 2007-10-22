@@ -84,21 +84,21 @@ public class ConfigMojo extends AbstractMojo {
   /**
    * The output directory for the "compile" step.
    *
-   * @parameter expression="${project.build.directory}/enunciate-compile"
+   * @parameter
    */
   private File compileDir = null;
 
   /**
    * The output directory for the "build" step.
    *
-   * @parameter expression="${project.build.directory}/enunciate-build"
+   * @parameter
    */
   private File buildDir = null;
 
   /**
    * The output directory for the "package" step.
    *
-   * @parameter expression="${project.build.directory}/enunciate-package"
+   * @parameter
    */
   private File packageDir = null;
 
