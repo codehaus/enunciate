@@ -287,13 +287,30 @@ public class ConfigMojo extends AbstractMojo {
     protected List<DeploymentModule> doInit() throws EnunciateException, IOException {
       List<DeploymentModule> modules = super.doInit();
 
+
       GWTDeploymentModule gwtModule = null;
+      SpringAppDeploymentModule springAppModule = null;
       for (DeploymentModule module : modules) {
-        if (module instanceof GWTDeploymentModule) {
+        if (module instanceof SpringAppDeploymentModule) {
+          springAppModule = (SpringAppDeploymentModule) module;
+        }
+        else if (module instanceof GWTDeploymentModule) {
           gwtModule = (GWTDeploymentModule) module;
         }
       }
-      if (gwtModule != null) {
+
+      if ((springAppModule != null) && (!springAppModule.isDisabled())) {
+        if (compileDir == null) {
+          //set an explicit compile dir if one doesn't exist because we're going to need to reference it to set the output directory for Maven.
+          setCompileDir(createTempDir());
+        }
+        
+        String outputDir = springAppModule.getCompileDir().getAbsolutePath();
+        getLog().info("Setting 'build.outputDirectory' to " + outputDir);
+        project.getBuild().setOutputDirectory(outputDir);
+      }
+
+      if ((gwtModule != null) && (!gwtModule.isDisabled())) {
         if (gwtHome != null) {
           gwtModule.setGwtHome(gwtHome);
         }
