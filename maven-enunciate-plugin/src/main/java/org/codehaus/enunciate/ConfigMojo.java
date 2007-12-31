@@ -23,6 +23,8 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.main.Enunciate;
 import org.codehaus.enunciate.modules.DeploymentModule;
+import org.codehaus.enunciate.modules.amf.AMFDeploymentModule;
+import org.codehaus.enunciate.modules.amf.config.FlexApp;
 import org.codehaus.enunciate.modules.gwt.GWTDeploymentModule;
 import org.codehaus.enunciate.modules.gwt.config.GWTApp;
 import org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule;
@@ -118,11 +120,25 @@ public class ConfigMojo extends AbstractMojo {
   private boolean addGWTSources = true;
 
   /**
-   * Whether to add the GWT sources to the project compile sources.
+   * Whether to add the actionscript sources to the project compile sources.
+   *
+   * @parameter
+   */
+  private boolean addActionscriptSources = true;
+
+  /**
+   * The GWT home.
    *
    * @parameter
    */
   private String gwtHome = null;
+
+  /**
+   * The Flex home.
+   *
+   * @parameter
+   */
+  private String flexHome = null;
 
   /**
    * The exports.
@@ -177,7 +193,7 @@ public class ConfigMojo extends AbstractMojo {
       sourceFiles.add(new File(sourcePath));
     }
 
-    Enunciate enunciate = new MavenSpecificEnunciate(sourceFiles);
+    Enunciate enunciate = loadMavenSpecificEnunciate(sourceFiles);
     EnunciateConfiguration config = new EnunciateConfiguration();
     if (this.configFile != null) {
       try {
@@ -268,9 +284,19 @@ public class ConfigMojo extends AbstractMojo {
   }
 
   /**
+   * Loads a correct instance of the Maven-specific Enunciate mechanism.
+   *
+   * @param sourceFiles The source files.
+   * @return The maven-specific Enunciate mechanism.
+   */
+  protected MavenSpecificEnunciate loadMavenSpecificEnunciate(Set<File> sourceFiles) {
+    return new MavenSpecificEnunciate(sourceFiles);
+  }
+
+  /**
    * Enunciate mechanism that logs via the Maven logging mechanism.
    */
-  private class MavenSpecificEnunciate extends Enunciate {
+  protected class MavenSpecificEnunciate extends Enunciate {
 
     public MavenSpecificEnunciate(Collection<File> rootDirs) {
       super();
@@ -287,7 +313,7 @@ public class ConfigMojo extends AbstractMojo {
     protected List<DeploymentModule> doInit() throws EnunciateException, IOException {
       List<DeploymentModule> modules = super.doInit();
 
-
+      AMFDeploymentModule amfModule = null;
       GWTDeploymentModule gwtModule = null;
       SpringAppDeploymentModule springAppModule = null;
       for (DeploymentModule module : modules) {
@@ -297,41 +323,81 @@ public class ConfigMojo extends AbstractMojo {
         else if (module instanceof GWTDeploymentModule) {
           gwtModule = (GWTDeploymentModule) module;
         }
+        else if (module instanceof AMFDeploymentModule) {
+          amfModule = (AMFDeploymentModule) module;
+        }
       }
 
       if ((springAppModule != null) && (!springAppModule.isDisabled())) {
-        if (compileDir == null) {
-          //set an explicit compile dir if one doesn't exist because we're going to need to reference it to set the output directory for Maven.
-          setCompileDir(createTempDir());
-        }
-        
-        String outputDir = springAppModule.getCompileDir().getAbsolutePath();
-        getLog().info("Setting 'build.outputDirectory' to " + outputDir);
-        project.getBuild().setOutputDirectory(outputDir);
+        configureSpringAppDeploymentModule(springAppModule);
       }
 
       if ((gwtModule != null) && (!gwtModule.isDisabled())) {
-        if (gwtHome != null) {
-          gwtModule.setGwtHome(gwtHome);
-        }
+        configureGWTDeploymentModule(gwtModule);
+      }
 
-        if (addGWTSources) {
-          String clientSidePath = gwtModule.getClientSideGenerateDir().getPath();
-          getLog().info("Adding '" + clientSidePath + "' to the compile source roots.");
-          project.addCompileSourceRoot(clientSidePath);
-          String serverSidePath = gwtModule.getServerSideGenerateDir().getPath();
-          getLog().info("Adding '" + serverSidePath + "' to the compile source roots.");
-          project.addCompileSourceRoot(serverSidePath);
-          for (GWTApp gwtApp : gwtModule.getGwtApps()) {
-            File srcDir = resolvePath(gwtApp.getSrcDir());
-            String path = srcDir.getPath();
-            getLog().info("Adding '" + path + "' to the compile source roots.");
-            project.addCompileSourceRoot(path);
-          }
-        }
+      if ((amfModule != null) && (!amfModule.isDisabled())) {
+        configureAMFModule(amfModule);
       }
 
       return modules;
+    }
+
+    protected void configureAMFModule(AMFDeploymentModule amfModule) {
+      if (flexHome != null) {
+        amfModule.setFlexSDKHome(flexHome);
+      }
+
+      if (addActionscriptSources) {
+        String clientSidePath = amfModule.getClientSideGenerateDir().getPath();
+        getLog().info("Adding '" + clientSidePath + "' to the compile source roots.");
+        project.addCompileSourceRoot(clientSidePath);
+        String serverSidePath = amfModule.getServerSideGenerateDir().getPath();
+        getLog().info("Adding '" + serverSidePath + "' to the compile source roots.");
+        project.addCompileSourceRoot(serverSidePath);
+        for (FlexApp flexApp : amfModule.getFlexApps()) {
+          File srcDir = resolvePath(flexApp.getSrcDir());
+          String path = srcDir.getPath();
+          getLog().info("Adding '" + path + "' to the compile source roots.");
+          project.addCompileSourceRoot(path);
+        }
+      }
+
+      if (amfModule.getCompilerConfig().getContextRoot() == null) {
+        amfModule.getCompilerConfig().setContextRoot("/" + project.getArtifactId());
+      }
+    }
+
+    protected void configureGWTDeploymentModule(GWTDeploymentModule gwtModule) {
+      if (gwtHome != null) {
+        gwtModule.setGwtHome(gwtHome);
+      }
+
+      if (addGWTSources) {
+        String clientSidePath = gwtModule.getClientSideGenerateDir().getPath();
+        getLog().info("Adding '" + clientSidePath + "' to the compile source roots.");
+        project.addCompileSourceRoot(clientSidePath);
+        String serverSidePath = gwtModule.getServerSideGenerateDir().getPath();
+        getLog().info("Adding '" + serverSidePath + "' to the compile source roots.");
+        project.addCompileSourceRoot(serverSidePath);
+        for (GWTApp gwtApp : gwtModule.getGwtApps()) {
+          File srcDir = resolvePath(gwtApp.getSrcDir());
+          String path = srcDir.getPath();
+          getLog().info("Adding '" + path + "' to the compile source roots.");
+          project.addCompileSourceRoot(path);
+        }
+      }
+    }
+
+    protected void configureSpringAppDeploymentModule(SpringAppDeploymentModule springAppModule) throws IOException {
+      if (compileDir == null) {
+        //set an explicit compile dir if one doesn't exist because we're going to need to reference it to set the output directory for Maven.
+        setCompileDir(createTempDir());
+      }
+
+      String outputDir = springAppModule.getCompileDir().getAbsolutePath();
+      getLog().info("Setting 'build.outputDirectory' to " + outputDir);
+      project.getBuild().setOutputDirectory(outputDir);
     }
 
     @Override
@@ -347,6 +413,17 @@ public class ConfigMojo extends AbstractMojo {
     @Override
     public void warn(String message, Object... formatArgs) {
       getLog().warn(String.format(message, formatArgs));
+    }
+
+    @Override
+    public boolean isDebug() {
+      return getLog().isDebugEnabled();
+    }
+
+
+    @Override
+    public boolean isVerbose() {
+      return getLog().isInfoEnabled();
     }
 
     @Override

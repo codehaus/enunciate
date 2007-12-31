@@ -43,6 +43,14 @@
       <version>1.6-SNAPSHOT</version>
     </dependency>
     <dependency>
+      <groupId>org.graniteds</groupId>
+      <artifactId>graniteds</artifactId>
+      <version>0.4.0</version>
+
+      <!--optional here only because it's not in a maven repo yet users have to install it manually.-->
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>3.8.1</version>
