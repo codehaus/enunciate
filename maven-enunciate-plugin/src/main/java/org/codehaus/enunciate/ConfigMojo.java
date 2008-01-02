@@ -187,13 +187,13 @@ public class ConfigMojo extends AbstractMojo {
   private MavenProjectHelper projectHelper;
 
   public void execute() throws MojoExecutionException {
-    Set<File> sourceFiles = new HashSet<File>();
+    Set<File> sourceDirs = new HashSet<File>();
     Collection<String> sourcePaths = (Collection<String>) project.getCompileSourceRoots();
     for (String sourcePath : sourcePaths) {
-      sourceFiles.add(new File(sourcePath));
+      sourceDirs.add(new File(sourcePath));
     }
 
-    Enunciate enunciate = loadMavenSpecificEnunciate(sourceFiles);
+    Enunciate enunciate = loadMavenSpecificEnunciate(sourceDirs);
     EnunciateConfiguration config = new EnunciateConfiguration();
     if (this.configFile != null) {
       try {
@@ -286,11 +286,11 @@ public class ConfigMojo extends AbstractMojo {
   /**
    * Loads a correct instance of the Maven-specific Enunciate mechanism.
    *
-   * @param sourceFiles The source files.
+   * @param sourceDirs The directories where the source files exist.
    * @return The maven-specific Enunciate mechanism.
    */
-  protected MavenSpecificEnunciate loadMavenSpecificEnunciate(Set<File> sourceFiles) {
-    return new MavenSpecificEnunciate(sourceFiles);
+  protected MavenSpecificEnunciate loadMavenSpecificEnunciate(Set<File> sourceDirs) {
+    return new MavenSpecificEnunciate(sourceDirs);
   }
 
   /**
