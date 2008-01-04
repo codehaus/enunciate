@@ -16,7 +16,7 @@ import java.util.Properties;
  *
  * @goal assemble
  * @phase generate-sources
- * @requiresDependencyResolution runtime
+ * @requiresDependencyResolution compile
 
  * @author Ryan Heaton
  */

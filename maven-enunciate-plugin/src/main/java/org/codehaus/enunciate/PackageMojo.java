@@ -12,7 +12,7 @@ import java.util.Properties;
  *
  * @goal package
  * @phase package
- * @requiresDependencyResolution runtime
+ * @requiresDependencyResolution compile
  */
 public class PackageMojo extends AbstractMojo {
 

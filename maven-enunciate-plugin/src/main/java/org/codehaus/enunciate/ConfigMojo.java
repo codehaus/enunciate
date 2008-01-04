@@ -40,7 +40,7 @@ import java.util.*;
  *
  * @goal config
  * @phase validate
- * @requiresDependencyResolution runtime
+ * @requiresDependencyResolution compile
  */
 public class ConfigMojo extends AbstractMojo {
 
@@ -204,6 +204,20 @@ public class ConfigMojo extends AbstractMojo {
       }
       enunciate.setConfigFile(this.configFile);
     }
+    else {
+      File defaultConfig = new File(project.getBasedir(), "enunciate.xml");
+      if (defaultConfig.exists()) {
+        getLog().info(defaultConfig.getAbsolutePath() + " exists, so it will be used.");
+        try {
+          config.load(defaultConfig);
+        }
+        catch (Exception e) {
+          throw new MojoExecutionException("Problem with enunciate config file " + defaultConfig, e);
+        }
+        enunciate.setConfigFile(defaultConfig);
+      }
+    }
+
     enunciate.setConfig(config);
     WarConfig warConfig = null;
     for (DeploymentModule module : config.getAllModules()) {
@@ -345,7 +359,7 @@ public class ConfigMojo extends AbstractMojo {
 
     protected void configureAMFModule(AMFDeploymentModule amfModule) {
       if (flexHome != null) {
-        amfModule.setFlexSDKHome(flexHome);
+        amfModule.setFlexHome(flexHome);
       }
 
       if (addActionscriptSources) {

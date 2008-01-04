@@ -12,7 +12,7 @@ import java.util.Properties;
  *
  * @goal generate
  * @phase generate-sources
- * @requiresDependencyResolution runtime
+ * @requiresDependencyResolution compile
  */
 public class GenerateMojo extends AbstractMojo {
 

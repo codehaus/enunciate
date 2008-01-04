@@ -26,7 +26,7 @@ import net.sf.jelly.apt.freemarker.FreemarkerModel;
  *
  * @goal export
  * @phase generate-sources
- * @requiresDependencyResolution runtime
+ * @requiresDependencyResolution compile
 
  * @author Ryan Heaton
  * @link http://docs.codehaus.org/display/ENUNCIATE/Working+With+Precompiled+Classes
