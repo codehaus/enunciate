@@ -94,8 +94,8 @@ public class AssembleMojo extends ConfigMojo {
     }
 
     @Override
-    protected void configureSpringAppDeploymentModule(SpringAppDeploymentModule springAppModule) throws IOException {
-      super.configureSpringAppDeploymentModule(springAppModule);
+    protected void onInitSpringAppDeploymentModule(SpringAppDeploymentModule springAppModule) throws IOException {
+      super.onInitSpringAppDeploymentModule(springAppModule);
 
       springAppModule.setDoCompile(false);
       springAppModule.setDoLibCopy(false);

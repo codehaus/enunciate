@@ -96,15 +96,6 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/com/sun/xml/bind/jaxb-impl/2.0/jaxb-impl-2.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
           <root url="jar:///home/heatonra/.m2/repository/woodstox/wstx-asl/2.9.3/wstx-asl-2.9.3.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -160,24 +151,6 @@
       <library>
         <CLASSES>
           <root url="jar:///home/heatonra/.m2/repository/jdom/jdom/1.0/jdom-1.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/javax/xml/bind/jaxb-api/2.0/jaxb-api-2.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/javax/activation/activation/1.1/activation-1.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -306,151 +279,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-rest/1.6-SNAPSHOT/enunciate-rest-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-docs/1.6-SNAPSHOT/enunciate-docs-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-spring-app-tools/1.6-SNAPSHOT/enunciate-spring-app-tools-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-top/1.6-SNAPSHOT/enunciate-top-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-gwt/1.6-SNAPSHOT/enunciate-gwt-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-xfire-client-tools/1.6-SNAPSHOT/enunciate-xfire-client-tools-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-gwt-tools/1.6-SNAPSHOT/enunciate-gwt-tools-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-core-tools/1.6-SNAPSHOT/enunciate-core-tools-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-xfire/1.6-SNAPSHOT/enunciate-xfire-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-jaxws/1.6-SNAPSHOT/enunciate-jaxws-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-xfire-tools/1.6-SNAPSHOT/enunciate-xfire-tools-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-xfire-client/1.6-SNAPSHOT/enunciate-xfire-client-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-spring-app/1.6-SNAPSHOT/enunciate-spring-app-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-core/1.6-SNAPSHOT/enunciate-core-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-rest-tools/1.6-SNAPSHOT/enunciate-rest-tools-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
           <root url="jar:///home/heatonra/.m2/repository/xfire/xfire-jsr181-api/1.0-M1/xfire-jsr181-api-1.0-M1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-xml/1.6-SNAPSHOT/enunciate-xml-1.6-SNAPSHOT.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -468,25 +297,88 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/graniteds/graniteds/0.4.0/graniteds-0.4.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-amf-tools/1.6-SNAPSHOT/enunciate-amf-tools-1.6-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
           <root url="jar:///home/heatonra/.m2/repository/log4j/log4j/1.2.13/log4j-1.2.13.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-rest/1.6/enunciate-rest-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-spring-app-tools/1.6/enunciate-spring-app-tools-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-xfire-client/1.6/enunciate-xfire-client-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-top/1.6/enunciate-top-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-jaxws/1.6/enunciate-jaxws-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-amf/1.6/enunciate-amf-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-xfire-tools/1.6/enunciate-xfire-tools-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-amf-tools/1.6/enunciate-amf-tools-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-spring-app/1.6/enunciate-spring-app-1.6.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -504,7 +396,115 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-amf/1.6-SNAPSHOT/enunciate-amf-1.6-SNAPSHOT.jar!/" />
+          <root url="jar:///home/heatonra/.m2/repository/com/adobe/blazeds/blazeds-core/1.0-beta1/blazeds-core-1.0-beta1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-gwt-tools/1.6/enunciate-gwt-tools-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-rest-tools/1.6/enunciate-rest-tools-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-xfire/1.6/enunciate-xfire-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-docs/1.6/enunciate-docs-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-core/1.6/enunciate-core-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/backport-util-concurrent/backport-util-concurrent/3.1/backport-util-concurrent-3.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-xfire-client-tools/1.6/enunciate-xfire-client-tools-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-xml/1.6/enunciate-xml-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-core-tools/1.6/enunciate-core-tools-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/com/adobe/blazeds/blazeds-remoting/1.0-beta1/blazeds-remoting-1.0-beta1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-gwt/1.6/enunciate-gwt-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar:///home/heatonra/.m2/repository/com/adobe/blazeds/blazeds-common/1.0-beta1/blazeds-common-1.0-beta1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
