@@ -7,6 +7,7 @@ import org.codehaus.enunciate.modules.BasicDeploymentModule;
 import org.codehaus.enunciate.apt.EnunciateFreemarkerModel;
 import org.codehaus.enunciate.config.SchemaInfo;
 import org.codehaus.enunciate.config.WsdlInfo;
+import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.contract.jaxb.TypeDefinition;
 import org.codehaus.enunciate.contract.jaxb.RootElementDeclaration;
 import org.codehaus.enunciate.contract.jaxws.EndpointInterface;
@@ -52,7 +53,6 @@ public class ExportMojo extends ConfigMojo {
       throw new MojoExecutionException("No stepper found in the project!");
     }
 
-
     try {
       stepper.stepTo(Enunciate.Target.GENERATE);
       stepper.close();
@@ -63,19 +63,8 @@ public class ExportMojo extends ConfigMojo {
   }
 
   @Override
-  protected MavenSpecificEnunciate loadMavenSpecificEnunciate(Set<File> sourceFiles) {
-    return new ExportOnlyMavenSpecificEnunciate(sourceFiles);
-  }
-
-  protected class ExportOnlyMavenSpecificEnunciate extends MavenSpecificEnunciate {
-    public ExportOnlyMavenSpecificEnunciate(Collection<File> sourceFiles) {
-      super(sourceFiles);
-    }
-
-    @Override
-    protected List<DeploymentModule> doInit() throws EnunciateException, IOException {
-      return Arrays.asList((DeploymentModule) new ExportListDeploymentModule());
-    }
+  protected EnunciateConfiguration createEnunciateConfiguration() {
+    return new EnunciateConfiguration(Arrays.asList((DeploymentModule) new ExportListDeploymentModule()));
   }
 
   protected class ExportListDeploymentModule extends BasicDeploymentModule {
@@ -114,7 +103,9 @@ public class ExportMojo extends ConfigMojo {
         exportedClasses.add(endpoint.getQualifiedName());
       }
 
-      PrintWriter out = new PrintWriter(new FileWriter(new File(new File(project.getBasedir(), classesDirectory), "META-INF/enunciate/api-exports")));
+      File apiExportsFile = new File(classesDirectory, "META-INF/enunciate/api-exports");
+      apiExportsFile.getParentFile().mkdirs();
+      PrintWriter out = new PrintWriter(new FileWriter(apiExportsFile));
       for (String exportedClass : exportedClasses) {
         out.println(exportedClass);
       }

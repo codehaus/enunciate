@@ -31,10 +31,21 @@ public class AssembleMojo extends ConfigMojo {
    */
   private String webappDirectory;
 
+  /**
+   * Whether to force the "packaging" of the project to be "war" packaging.
+   *
+   * @parameter
+   */
+  private boolean forceWarPackaging = true;
+
   private AssembleOnlyMavenSpecificEnunciate enunciate = null;
 
   @Override
   public void execute() throws MojoExecutionException {
+    if (forceWarPackaging && !"war".equalsIgnoreCase(this.project.getPackaging())) {
+      throw new MojoExecutionException("The 'assemble' goal requires 'war' packaging.");
+    }
+
     super.execute();
 
     Properties properties = this.project.getProperties();

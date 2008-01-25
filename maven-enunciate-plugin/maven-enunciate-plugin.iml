@@ -444,7 +444,9 @@
           <root url="jar:///home/heatonra/.m2/repository/org/codehaus/enunciate/enunciate-core/1.6/enunciate-core-1.6.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="file:///home/heatonra/sandbox/enunciate/core/src/java" />
+        </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library">

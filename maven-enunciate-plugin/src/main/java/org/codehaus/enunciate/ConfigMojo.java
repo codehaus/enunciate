@@ -194,7 +194,7 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     MavenSpecificEnunciate enunciate = loadMavenSpecificEnunciate(sourceDirs);
-    EnunciateConfiguration config = new EnunciateConfiguration();
+    EnunciateConfiguration config = createEnunciateConfiguration();
     if (this.configFile != null) {
       try {
         config.load(this.configFile);
@@ -296,6 +296,15 @@ public class ConfigMojo extends AbstractMojo {
     catch (Exception e) {
       throw new MojoExecutionException("Error initializing Enunciate mechanism.", e);
     }
+  }
+
+  /**
+   * Create an Enunciate configuration.
+   *
+   * @return The enunciate configuration.
+   */
+  protected EnunciateConfiguration createEnunciateConfiguration() {
+    return new EnunciateConfiguration();
   }
 
   /**
