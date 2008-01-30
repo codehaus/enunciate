@@ -47,8 +47,7 @@ public class ExportMojo extends ConfigMojo {
   public void execute() throws MojoExecutionException {
     super.execute();
 
-    Properties properties = this.project.getProperties();
-    Enunciate.Stepper stepper = (Enunciate.Stepper) properties.get(ConfigMojo.ENUNCIATE_STEPPER_PROPERTY);
+    Enunciate.Stepper stepper = (Enunciate.Stepper) getPluginContext().get(ConfigMojo.ENUNCIATE_STEPPER_PROPERTY);
     if (stepper == null) {
       throw new MojoExecutionException("No stepper found in the project!");
     }

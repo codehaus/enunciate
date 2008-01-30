@@ -26,8 +26,7 @@ public class CompileMojo extends AbstractMojo {
   protected MavenProject project;
 
   public void execute() throws MojoExecutionException {
-    Properties properties = this.project.getProperties();
-    Enunciate.Stepper stepper = (Enunciate.Stepper) properties.get(ConfigMojo.ENUNCIATE_STEPPER_PROPERTY);
+    Enunciate.Stepper stepper = (Enunciate.Stepper) getPluginContext().get(ConfigMojo.ENUNCIATE_STEPPER_PROPERTY);
     if (stepper == null) {
       throw new MojoExecutionException("No stepper found in the project!");
     }

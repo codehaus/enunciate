@@ -290,8 +290,7 @@ public class ConfigMojo extends AbstractMojo {
     try {
       enunciate.loadMavenConfiguration();
       Enunciate.Stepper stepper = enunciate.getStepper();
-      Properties properties = this.project.getProperties();
-      properties.put(ENUNCIATE_STEPPER_PROPERTY, stepper);
+      getPluginContext().put(ENUNCIATE_STEPPER_PROPERTY, stepper);
     }
     catch (Exception e) {
       throw new MojoExecutionException("Error initializing Enunciate mechanism.", e);
