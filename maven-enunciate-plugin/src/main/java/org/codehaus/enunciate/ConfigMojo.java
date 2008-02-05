@@ -195,6 +195,7 @@ public class ConfigMojo extends AbstractMojo {
 
     MavenSpecificEnunciate enunciate = loadMavenSpecificEnunciate(sourceDirs);
     EnunciateConfiguration config = createEnunciateConfiguration();
+    config.setLabel(project.getArtifactId());
     if (this.configFile != null) {
       try {
         config.load(this.configFile);
