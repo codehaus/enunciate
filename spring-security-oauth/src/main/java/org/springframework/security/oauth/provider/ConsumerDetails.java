@@ -20,13 +20,6 @@ public interface ConsumerDetails extends Serializable {
   String getConsumerKey();
 
   /**
-   * Returns the authorities granted to the user. Cannot return <code>null</code>.
-   *
-   * @return the authorities (never <code>null</code>)
-   */
-  GrantedAuthority[] getAuthorities();
-
-  /**
    * The signature secret.
    *
    * @return The signature secret.
