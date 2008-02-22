@@ -13,6 +13,11 @@ public enum OAuthConsumerParameter {
   oauth_consumer_key,
 
   /**
+   * Parameter for the oauth token.
+   */
+  oauth_token,
+
+  /**
    * Parameter for the signature method.
    */
   oauth_signature_method,

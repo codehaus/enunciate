@@ -1,217 +1,316 @@
 package org.springframework.security.oauth.provider;
 
-import org.acegisecurity.Authentication;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.MessageSourceAware;
+import org.springframework.context.MessageSource;
+import org.springframework.context.support.MessageSourceAccessor;
+import org.springframework.util.Assert;
+import org.springframework.security.oauth.common.signature.SignatureSecret;
+import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
+import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
+import org.springframework.security.oauth.common.signature.CoreOAuthSignatureMethodFactory;
+import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.AuthenticationManager;
-import org.acegisecurity.util.StringSplitUtils;
+import org.acegisecurity.BadCredentialsException;
+import org.acegisecurity.AcegiMessageSource;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
-import org.acegisecurity.providers.anonymous.AnonymousAuthenticationToken;
-import org.acegisecurity.ui.AuthenticationDetailsSource;
-import org.acegisecurity.ui.AuthenticationDetailsSourceImpl;
-import org.acegisecurity.ui.AuthenticationEntryPoint;
-import org.acegisecurity.ui.rememberme.RememberMeServices;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.Assert;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.net.URLDecoder;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
- * Processing filter for OAuth authentication requests.  Initial code was lifted from
- * {@link org.acegisecurity.ui.basicauth.BasicProcessingFilter}
+ * Base OAuth processing filter.
  *
  * @author Ryan Heaton
  */
-public class OAuthProcessingFilter implements Filter, InitializingBean {
+public abstract class OAuthProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
 
-  private static final Log LOG = LogFactory.getLog(OAuthProcessingFilter.class);
+  private static final Log LOG = LogFactory.getLog(OAuthTokenProcessingFilter.class);
+  private final List<String> allowedMethods = new ArrayList<String>(Arrays.asList("GET", "POST"));
+  private OAuthProcessingFilterEntryPoint authenticationEntryPoint = new OAuthProcessingFilterEntryPoint();
+  protected MessageSourceAccessor messages = AcegiMessageSource.getAccessor();
+  private OAuthConsumerDetailsService consumerDetailsService;
+  private String filterProcessesUrl = "/oauth_access_token";
+  private OAuthProviderSupport providerSupport = new CoreOAuthProviderSupport();
+  private OAuthSignatureMethodFactory signatureMethodFactory = new CoreOAuthSignatureMethodFactory();
 
-  private AuthenticationDetailsSource authenticationDetailsSource = new AuthenticationDetailsSourceImpl();
-  private AuthenticationManager authenticationManager;
-  private AuthenticationEntryPoint authenticationEntryPoint;
-  private RememberMeServices rememberMeServices;
-  private boolean ignoreFailure = true;
-
-  // Inherited.
   public void afterPropertiesSet() throws Exception {
-    Assert.notNull(this.authenticationManager, "An AuthenticationManager is required");
-    if (!ignoreFailure) {
-      Assert.notNull(this.authenticationEntryPoint, "An AuthenticationEntryPoint is required");
-    }
+    Assert.notNull(consumerDetailsService, "A consumer details service is required");
   }
 
-  // Inherited.
+  public void init(FilterConfig ignored) throws ServletException {
+  }
+
   public void destroy() {
-    //no-op
   }
 
-  /**
-   * Filter the request through OAuth authentication processing.
-   *
-   * @param servletRequest The request.
-   * @param servletResponse The response.
-   * @param chain The filter chain.
-   */
   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
     HttpServletRequest request = (HttpServletRequest) servletRequest;
     HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-    String header = request.getHeader("Authorization");
-    if ((header != null) && (header.toLowerCase().startsWith("oauth "))) {
-      String authHeaderValue = header.substring(6);
-
-      //create a map of the authorization header values per OAuth Core 1.0, section 5.4.1
-      String[] headerEntries = StringSplitUtils.splitIgnoringQuotes(authHeaderValue, ',');
-      Map<String, String> headerMap = new HashMap<String, String>();
-      Iterator headerEntriesIt = StringSplitUtils.splitEachArrayElementAndCreateMap(headerEntries, "=", "\"").entrySet().iterator();
-      while (headerEntriesIt.hasNext()) {
-        Map.Entry entry = (Map.Entry) headerEntriesIt.next();
-        String key = URLDecoder.decode((String) entry.getKey(), "utf-8");
-        String value = URLDecoder.decode((String) entry.getValue(), "utf-8");
-        headerMap.put(key, value);
+    if (requiresAuthentication(request)) {
+      if (!allowedMethods.contains(request.getMethod().toUpperCase())) {
+        response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+        return;
       }
 
-      String consumerKey = headerMap.remove("oauth_consumer_key");
-      String signatureMethod = headerMap.remove("oauth_signature_method");
-      String signature = headerMap.remove("oauth_signature");
-      String timestamp = headerMap.remove("oauth_timestamp");
-      String nonce = headerMap.remove("oauth_nonce");
-      String version = headerMap.remove("oauth_version");
+      try {
+        Map<String, String> oauthParams = getProviderSupport().parseParameters(request);
 
-      if ((version != null) && (!"1.0".equals(version))) {
-        throw new OAuthVersionUnsupportedException("Unsupported OAuth version: " + version);
+        validateOAuthParams(oauthParams);
+
+        String consumerKey = oauthParams.get(OAuthConsumerParameter.oauth_consumer_key.toString());
+        String token = oauthParams.get(OAuthConsumerParameter.oauth_token.toString());
+        SignatureSecret secret = readSignatureSecret(consumerKey, token);
+        String signatureMethod = oauthParams.get(OAuthConsumerParameter.oauth_signature_method.toString());
+        String signature = oauthParams.get(OAuthConsumerParameter.oauth_signature.toString());
+        String signatureBaseString = getProviderSupport().getSignatureBaseString(request);
+        OAuthSignatureMethod method = getSignatureMethodFactory().getSignatureMethod(signatureMethod, secret);
+        method.verify(signatureBaseString, signature);
+        onValidSignature(oauthParams, request, response, chain);
       }
-
-      String username = "";
-      String password = "";
-      int delim = token.indexOf(":");
-
-      if (delim != -1) {
-        username = token.substring(0, delim);
-        password = token.substring(delim + 1);
-      }
-
-      if (authenticationIsRequired(username)) {
-        UsernamePasswordAuthenticationToken authRequest =
-          new UsernamePasswordAuthenticationToken(username, password);
-        authRequest.setDetails(authenticationDetailsSource.buildDetails((HttpServletRequest) servletRequest));
-
-        Authentication authResult;
-
-        try {
-          authResult = authenticationManager.authenticate(authRequest);
-        }
-        catch (AuthenticationException failed) {
-          // Authentication failed
-          if (LOG.isDebugEnabled()) {
-            LOG.debug("Authentication request for user: " + username + " failed: " + failed.toString());
-          }
-
-          SecurityContextHolder.getContext().setAuthentication(null);
-
-          if (rememberMeServices != null) {
-            rememberMeServices.loginFail(request, response);
-          }
-
-          if (ignoreFailure) {
-            chain.doFilter(servletRequest, servletResponse);
-          }
-          else {
-            authenticationEntryPoint.commence(servletRequest, servletResponse, failed);
-          }
-
-          return;
-        }
-
-        // Authentication success
-        if (LOG.isDebugEnabled()) {
-          LOG.debug("Authentication success: " + authResult.toString());
-        }
-
-        SecurityContextHolder.getContext().setAuthentication(authResult);
-
-        if (rememberMeServices != null) {
-          rememberMeServices.loginSuccess(request, response, authResult);
-        }
+      catch (AuthenticationException ae) {
+        fail(request, response, ae);
       }
     }
-
-    chain.doFilter(servletRequest, servletResponse);
+    else {
+      chain.doFilter(servletRequest, servletResponse);
+    }
   }
 
-  private boolean authenticationIsRequired(String username) {
-    // Only reauthenticate if username doesn't match SecurityContextHolder and user isn't authenticated
-    // (see SEC-53)
-    Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
-
-    if (existingAuth == null || !existingAuth.isAuthenticated()) {
-      return true;
-    }
-
-    // Limit username comparison to providers which use usernames (ie UsernamePasswordAuthenticationToken)
-    // (see SEC-348)
-
-    if (existingAuth instanceof UsernamePasswordAuthenticationToken && !existingAuth.getName().equals(username)) {
-      return true;
-    }
-
-    // Handle unusual condition where an AnonymousAuthenticationToken is already present
-    // This shouldn't happen very often, as BasicProcessingFitler is meant to be earlier in the filter
-    // chain than AnonymousProcessingFilter. Nevertheless, presence of both an AnonymousAuthenticationToken
-    // together with a BASIC authentication request header should indicate reauthentication using the
-    // BASIC protocol is desirable. This behaviour is also consistent with that provided by form and digest,
-    // both of which force re-authentication if the respective header is detected (and in doing so replace
-    // any existing AnonymousAuthenticationToken). See SEC-610.
-    if (existingAuth instanceof AnonymousAuthenticationToken) {
-      return true;
-    }
-
-    return false;
+  /**
+   * Logic executed on valid signature. Default implementation continues the chain.
+   *
+   * @param params The oauth params.
+   * @param request The request.
+   * @param response The response
+   * @param chain The filter chain.
+   */
+  protected void onValidSignature(Map<String, String> params, HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+    chain.doFilter(request, response);
   }
 
-  public AuthenticationEntryPoint getAuthenticationEntryPoint() {
+  /**
+   * Read the signature secret for the specified consumer key and OAuth token.
+   *
+   * @param consumerKey The consumer key.
+   * @param token The OAuth token.
+   * @return the signature secret.
+   */
+  protected SignatureSecret readSignatureSecret(String consumerKey, String token) {
+    return getConsumerDetailsService().getSignatureSecret(consumerKey, token);
+  }
+
+  /**
+   * Validates the OAuth parameters.
+   *
+   * @param oauthParams The OAuth parameters to validate.
+   * @throws org.acegisecurity.BadCredentialsException If the OAuth parameters are invalid.
+   */
+  protected void validateOAuthParams(Map<String, String> oauthParams) throws BadCredentialsException {
+    String version = oauthParams.get(OAuthConsumerParameter.oauth_version.toString());
+    if ((version != null) && (!"1.0".equals(version))) {
+      throw new OAuthVersionUnsupportedException("Unsupported OAuth version: " + version);
+    }
+
+    String realm = oauthParams.get("realm");
+    if ((realm != null) && (!realm.equals(this.authenticationEntryPoint.getRealmName()))) {
+      throw new BadCredentialsException(messages.getMessage("OAuthUnauthenticatedRequestTokenProcessingFilter.incorrectRealm",
+                                                      new Object[]{realm, this.getAuthenticationEntryPoint().getRealmName()},
+                                                      "Response realm name '{0}' does not match system realm name of '{1}'"));
+    }
+
+    String consumerKey = oauthParams.get(OAuthConsumerParameter.oauth_consumer_key.toString());
+    if (consumerKey == null) {
+      throw new BadCredentialsException(messages.getMessage("OAuthUnauthenticatedRequestTokenProcessingFilter.missingConsumerKey", "Missing consumer key."));
+    }
+
+    String signatureMethod = oauthParams.get(OAuthConsumerParameter.oauth_signature_method.toString());
+    if (signatureMethod == null) {
+      throw new BadCredentialsException(messages.getMessage("OAuthUnauthenticatedRequestTokenProcessingFilter.missingSignatureMethod", "Missing signature method."));
+    }
+
+    String signature = oauthParams.get(OAuthConsumerParameter.oauth_signature.toString());
+    if (signature == null) {
+      throw new BadCredentialsException(messages.getMessage("OAuthUnauthenticatedRequestTokenProcessingFilter.missingSignature", "Missing signature."));
+    }
+
+    String timestamp = oauthParams.get(OAuthConsumerParameter.oauth_timestamp.toString());
+    if (timestamp == null) {
+      throw new BadCredentialsException(messages.getMessage("OAuthUnauthenticatedRequestTokenProcessingFilter.missingTimestamp", "Missing timestamp."));
+    }
+
+    String nonce = oauthParams.get(OAuthConsumerParameter.oauth_nonce.toString());
+    if (nonce == null) {
+      throw new BadCredentialsException(messages.getMessage("OAuthUnauthenticatedRequestTokenProcessingFilter.missingNonce", "Missing nonce."));
+    }
+
+    try {
+      getConsumerDetailsService().validateNonce(consumerKey, Long.parseLong(timestamp), nonce);
+    }
+    catch (NumberFormatException e) {
+      throw new BadCredentialsException(messages.getMessage("OAuthUnauthenticatedRequestTokenProcessingFilter.invalidTimestamp", new Object[] {timestamp}, "Timestamp must be a positive integer. Invalid value: {0}"));
+    }
+  }
+
+  /**
+   * Common logic for OAuth failed.
+   *
+   * @param request The request.
+   * @param response The response.
+   * @param failure The failure.
+   */
+  protected void fail(ServletRequest request, ServletResponse response, AuthenticationException failure) throws IOException, ServletException {
+    SecurityContextHolder.getContext().setAuthentication(null);
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(failure);
+    }
+
+    authenticationEntryPoint.commence(request, response, failure);
+  }
+
+  /**
+   * Whether this filter is configured to process the specified request.
+   *
+   * @param request The request.
+   * @return Whether this filter is configured to process the specified request.
+   */
+  protected boolean requiresAuthentication(HttpServletRequest request) {
+    //copied from org.acegisecurity.ui.AbstractProcessingFilter.requiresAuthentication
+    String uri = request.getRequestURI();
+    int pathParamIndex = uri.indexOf(';');
+
+    if (pathParamIndex > 0) {
+      // strip everything after the first semi-colon
+      uri = uri.substring(0, pathParamIndex);
+    }
+
+    if ("".equals(request.getContextPath())) {
+      return uri.endsWith(filterProcessesUrl);
+    }
+
+    return uri.endsWith(request.getContextPath() + filterProcessesUrl);
+  }
+
+  /**
+   * The authentication entry point.
+   *
+   * @return The authentication entry point.
+   */
+  public OAuthProcessingFilterEntryPoint getAuthenticationEntryPoint() {
     return authenticationEntryPoint;
   }
 
-  public AuthenticationManager getAuthenticationManager() {
-    return authenticationManager;
-  }
-
-  public void init(FilterConfig arg0) throws ServletException {
-  }
-
-  public boolean isIgnoreFailure() {
-    return ignoreFailure;
-  }
-
-  public void setAuthenticationDetailsSource(AuthenticationDetailsSource authenticationDetailsSource) {
-    Assert.notNull(authenticationDetailsSource, "AuthenticationDetailsSource required");
-    this.authenticationDetailsSource = authenticationDetailsSource;
-  }
-
-  public void setAuthenticationEntryPoint(AuthenticationEntryPoint authenticationEntryPoint) {
+  /**
+   * The authentication entry point.
+   *
+   * @param authenticationEntryPoint The authentication entry point.
+   */
+  public void setAuthenticationEntryPoint(OAuthProcessingFilterEntryPoint authenticationEntryPoint) {
     this.authenticationEntryPoint = authenticationEntryPoint;
   }
 
-  public void setAuthenticationManager(AuthenticationManager authenticationManager) {
-    this.authenticationManager = authenticationManager;
+  /**
+   * The consumer details service.
+   *
+   * @return The consumer details service.
+   */
+  public OAuthConsumerDetailsService getConsumerDetailsService() {
+    return consumerDetailsService;
   }
 
-  public void setIgnoreFailure(boolean ignoreFailure) {
-    this.ignoreFailure = ignoreFailure;
+  /**
+   * The consumer details service.
+   *
+   * @param consumerDetailsService The consumer details service.
+   */
+  public void setConsumerDetailsService(OAuthConsumerDetailsService consumerDetailsService) {
+    this.consumerDetailsService = consumerDetailsService;
   }
 
-  public void setRememberMeServices(RememberMeServices rememberMeServices) {
-    this.rememberMeServices = rememberMeServices;
+  /**
+   * The URL for which this filter will be applied.
+   *
+   * @return The URL for which this filter will be applied.
+   */
+  public String getFilterProcessesUrl() {
+    return filterProcessesUrl;
   }
 
+  /**
+   * The URL for which this filter will be applied.
+   *
+   * @param filterProcessesUrl The URL for which this filter will be applied.
+   */
+  public void setFilterProcessesUrl(String filterProcessesUrl) {
+    this.filterProcessesUrl = filterProcessesUrl;
+  }
+
+  /**
+   * Set the message source.
+   *
+   * @param messageSource The message source.
+   */
+  public void setMessageSource(MessageSource messageSource) {
+    this.messages = new MessageSourceAccessor(messageSource);
+  }
+
+  /**
+   * The OAuth provider support.
+   *
+   * @return The OAuth provider support.
+   */
+  public OAuthProviderSupport getProviderSupport() {
+    return providerSupport;
+  }
+
+  /**
+   * The OAuth provider support.
+   *
+   * @param providerSupport The OAuth provider support.
+   */
+  public void setProviderSupport(OAuthProviderSupport providerSupport) {
+    this.providerSupport = providerSupport;
+  }
+
+  /**
+   * The OAuth signature method factory.
+   *
+   * @return The OAuth signature method factory.
+   */
+  public OAuthSignatureMethodFactory getSignatureMethodFactory() {
+    return signatureMethodFactory;
+  }
+
+  /**
+   * The OAuth signature method factory.
+   *
+   * @param signatureMethodFactory The OAuth signature method factory.
+   */
+  public void setSignatureMethodFactory(OAuthSignatureMethodFactory signatureMethodFactory) {
+    this.signatureMethodFactory = signatureMethodFactory;
+  }
+
+  /**
+   * The allowed set of HTTP methods.
+   *
+   * @param allowedMethods The allowed set of methods.
+   */
+  public void setAllowedMethods(List<String> allowedMethods) {
+    this.allowedMethods.clear();
+    if (allowedMethods != null) {
+      for (String allowedMethod : allowedMethods) {
+        this.allowedMethods.add(allowedMethod.toUpperCase());
+      }
+    }
+  }
 }

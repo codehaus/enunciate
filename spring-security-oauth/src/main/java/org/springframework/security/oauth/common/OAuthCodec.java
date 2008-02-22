@@ -34,6 +34,10 @@ public class OAuthCodec extends URLCodec {
    * @return The encoded value.
    */
   public static String oauthEncode(String value) {
+    if (value == null) {
+      return "";
+    }
+
     try {
       return new String(URLCodec.encodeUrl(SAFE_CHARACTERS, value.getBytes("UTF-8")), "US-ASCII");
     }
@@ -49,6 +53,10 @@ public class OAuthCodec extends URLCodec {
    * @return The decoded value.
    */
   public static String oauthDecode(String value) throws DecoderException {
+    if (value == null) {
+      return "";
+    }
+
     try {
       return new String(URLCodec.decodeUrl(value.getBytes("US-ASCII")), "UTF-8");
     }

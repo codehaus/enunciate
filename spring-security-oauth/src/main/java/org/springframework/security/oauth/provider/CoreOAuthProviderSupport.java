@@ -17,6 +17,7 @@ import java.util.*;
 public class CoreOAuthProviderSupport implements OAuthProviderSupport {
 
   private final Set<String> supportedOAuthParameters;
+  private String baseUrl = null;
 
   public CoreOAuthProviderSupport() {
     Set<String> supportedOAuthParameters = new HashSet<String>();
@@ -73,7 +74,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
   }
 
   // Inherited.
-  public String getSignatureBaseString(HttpServletRequest request, String configuredUrl) {
+  public String getSignatureBaseString(HttpServletRequest request) {
     Map<String, String> significantParameters = loadSignificantParametersForSignatureBaseString(request);
 
     //now sort them (according to the spec.
@@ -99,7 +100,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
       }
     }
 
-    String url = configuredUrl;
+    String url = getBaseUrl();
     if (url == null) {
       //if no URL is configured, then we'll attempt to reconstruct the URL.  This may be inaccurate.
       url = request.getRequestURL().toString();
@@ -155,4 +156,21 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
     return significantParameters;
   }
 
+  /**
+   * The configured base URL for this OAuth provider.
+   *
+   * @return The configured base URL for this OAuth provider.
+   */
+  public String getBaseUrl() {
+    return baseUrl;
+  }
+
+  /**
+   * The configured base URL for the OAuth provider.
+   *
+   * @param baseUrl The configured base URL for the OAuth provider.
+   */
+  public void setBaseUrl(String baseUrl) {
+    this.baseUrl = baseUrl;
+  }
 }
