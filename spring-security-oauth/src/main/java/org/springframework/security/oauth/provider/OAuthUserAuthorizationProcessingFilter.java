@@ -6,6 +6,7 @@ import org.acegisecurity.BadCredentialsException;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.ui.AbstractProcessingFilter;
 import org.springframework.util.Assert;
+import org.springframework.security.oauth.provider.token.OAuthTokenServices;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,7 +19,7 @@ import java.io.IOException;
  */
 public class OAuthUserAuthorizationProcessingFilter extends AbstractProcessingFilter {
 
-  private OAuthConsumerDetailsService consumerDetailsService;
+  private OAuthTokenServices tokenServices;
   private String tokenIdParameterName = "oauth_token";
   private String callbackParameterName = "oauth_callback";
 
@@ -30,7 +31,7 @@ public class OAuthUserAuthorizationProcessingFilter extends AbstractProcessingFi
   public void afterPropertiesSet() throws Exception {
     Assert.hasLength(getAuthenticationFailureUrl(), "authenticationFailureUrl must be provided.");
     Assert.notNull(getRememberMeServices());
-    Assert.notNull(getConsumerDetailsService(), "A consumer details service must be provided.");
+    Assert.notNull(getTokenServices(), "A consumer details service must be provided.");
   }
 
   @Override
@@ -45,7 +46,7 @@ public class OAuthUserAuthorizationProcessingFilter extends AbstractProcessingFi
     if (!authentication.isAuthenticated()) {
       throw new UserNotAuthenticatedException("User must be authenticated before authorizing a request token.");
     }
-    getConsumerDetailsService().authorizeRequestToken(request.getParameter(getTokenParameterName()));
+    getTokenServices().authorizeRequestToken(request.getParameter(getTokenParameterName()), consumerKey);
     return authentication;
   }
 
@@ -106,20 +107,21 @@ public class OAuthUserAuthorizationProcessingFilter extends AbstractProcessingFi
   }
 
   /**
-   * The consumer details service.
+   * Get the OAuth token services.
    *
-   * @return The consumer details service.
+   * @return The OAuth token services.
    */
-  public OAuthConsumerDetailsService getConsumerDetailsService() {
-    return consumerDetailsService;
+  public OAuthTokenServices getTokenServices() {
+    return tokenServices;
   }
 
   /**
-   * The consumer details service.
+   * The OAuth token services.
    *
-   * @param consumerDetailsService The consumer details service.
+   * @param tokenServices The OAuth token services.
    */
-  public void setConsumerDetailsService(OAuthConsumerDetailsService consumerDetailsService) {
-    this.consumerDetailsService = consumerDetailsService;
+  public void setTokenServices(OAuthTokenServices tokenServices) {
+    this.tokenServices = tokenServices;
   }
+
 }

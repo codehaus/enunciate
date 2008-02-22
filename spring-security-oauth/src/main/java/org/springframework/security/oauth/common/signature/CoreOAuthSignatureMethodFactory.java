@@ -4,6 +4,7 @@ import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.providers.x509.X509AuthenticationToken;
 import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
+import org.springframework.security.oauth.common.OAuthToken;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
@@ -22,15 +23,15 @@ public class CoreOAuthSignatureMethodFactory implements OAuthSignatureMethodFact
   private boolean supportHMAC_SHA1 = true;
   private boolean supportRSA_SHA1 = true;
 
-  public OAuthSignatureMethod getSignatureMethod(String methodName, SignatureSecret signatureSecret) throws UnsupportedSignatureMethodException {
+  public OAuthSignatureMethod getSignatureMethod(String methodName, SignatureSecret signatureSecret, OAuthToken token) throws UnsupportedSignatureMethodException {
     if (supportPlainText && PlainTextSignatureMethod.SIGNATURE_NAME.equals(methodName)) {
-      if (!(signatureSecret instanceof ConsumerTokenSecret)) {
+      if (!(signatureSecret instanceof SharedConsumerSecret)) {
         throw new IllegalArgumentException("Invalid secret for signature method " + methodName + ". Expected a " +
-          ConsumerTokenSecret.class.getName() + ", got " + (signatureSecret == null ? "null" : signatureSecret.getClass().getName()) + ".");
+          SharedConsumerSecret.class.getName() + ", got " + (signatureSecret == null ? "null" : signatureSecret.getClass().getName()) + ".");
       }
 
-      String consumerSecret = ((ConsumerTokenSecret) signatureSecret).getConsumerSecret();
-      String tokenSecret = ((ConsumerTokenSecret) signatureSecret).getTokenSecret();
+      String consumerSecret = ((SharedConsumerSecret) signatureSecret).getConsumerSecret();
+      String tokenSecret = token.getSecret();
 
       if (consumerSecret == null) {
         consumerSecret = "";
@@ -45,13 +46,13 @@ public class CoreOAuthSignatureMethodFactory implements OAuthSignatureMethodFact
       return new PlainTextSignatureMethod(oauthEncode(new StringBuilder(consumerSecret).append('&').append(tokenSecret).toString()));
     }
     else if (supportHMAC_SHA1 && HMAC_SHA1SignatureMethod.SIGNATURE_NAME.equals(methodName)) {
-      if (!(signatureSecret instanceof ConsumerTokenSecret)) {
+      if (!(signatureSecret instanceof SharedConsumerSecret)) {
         throw new IllegalArgumentException("Invalid secret for signature method " + methodName + ". Expected a " +
-          ConsumerTokenSecret.class.getName() + ", got " + (signatureSecret == null ? "null" : signatureSecret.getClass().getName()) + ".");
+          SharedConsumerSecret.class.getName() + ", got " + (signatureSecret == null ? "null" : signatureSecret.getClass().getName()) + ".");
       }
 
-      String consumerSecret = ((ConsumerTokenSecret) signatureSecret).getConsumerSecret();
-      String tokenSecret = ((ConsumerTokenSecret) signatureSecret).getTokenSecret();
+      String consumerSecret = ((SharedConsumerSecret) signatureSecret).getConsumerSecret();
+      String tokenSecret = token.getSecret();
 
       if (consumerSecret == null) {
         consumerSecret = "";

@@ -1,7 +1,7 @@
 package org.springframework.security.oauth.provider;
 
+import org.acegisecurity.AuthenticationException;
 import org.springframework.security.oauth.common.OAuthCodec;
-import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
 import org.springframework.security.oauth.common.OAuthToken;
 
@@ -9,19 +9,18 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 
 /**
- * Processing filter for handling a request for an OAuth token. The default implementation writes out
- * the response for a new unauthenticated request token.
+ * Processing filter for handling a request for an OAuth token. The default implementation assumes a request for a new
+ * unauthenticated request token.
  *
  * @author Ryan Heaton
  */
-public class OAuthTokenProcessingFilter extends OAuthProcessingFilter {
+public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProcessingFilter {
 
-  protected void onValidSignature(Map<String, String> params, HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
+  protected void onValidSignature(ConsumerDetails consumerDetails, HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
     //signature is verified; create the token, send the response.
-    OAuthToken authToken = createOAuthToken(params.get(OAuthConsumerParameter.oauth_consumer_key.toString()));
+    OAuthToken authToken = createOAuthToken(consumerDetails.getConsumerKey());
     String tokenName = OAuthCodec.oauthEncode(OAuthProviderParameter.oauth_token.toString());
     String tokenValue = OAuthCodec.oauthEncode(authToken.getValue());
     String secretName = OAuthCodec.oauthEncode(OAuthProviderParameter.oauth_token_secret.toString());
@@ -33,6 +32,11 @@ public class OAuthTokenProcessingFilter extends OAuthProcessingFilter {
     response.flushBuffer();
   }
 
+  @Override
+  protected void onNewTimestamp() throws AuthenticationException {
+    //no-op. A new timestamp should be supplied for a request for a new unauthenticated request token.
+  }
+
   /**
    * Create the OAuth token for the specified consumer key.
    *
@@ -40,7 +44,7 @@ public class OAuthTokenProcessingFilter extends OAuthProcessingFilter {
    * @return The OAuth token.
    */
   protected OAuthToken createOAuthToken(String consumerKey) {
-    return getConsumerDetailsService().createUnauthenticatedToken(consumerKey);
+    return getTokenServices().createUnauthorizedRequestToken(consumerKey);
   }
 
 }

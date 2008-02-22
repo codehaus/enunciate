@@ -5,14 +5,12 @@ package org.springframework.security.oauth.common.signature;
  *
  * @author Ryan Heaton
  */
-public class ConsumerTokenSecret {
+public class SharedConsumerSecret {
 
   private final String consumerSecret;
-  private final String tokenSecret;
 
-  public ConsumerTokenSecret(String consumerSecret, String tokenSecret) {
+  public SharedConsumerSecret(String consumerSecret) {
     this.consumerSecret = consumerSecret;
-    this.tokenSecret = tokenSecret;
   }
 
   /**
@@ -24,12 +22,4 @@ public class ConsumerTokenSecret {
     return consumerSecret;
   }
 
-  /**
-   * The token secret.
-   *
-   * @return The token secret.
-   */
-  public String getTokenSecret() {
-    return tokenSecret;
-  }
 }
