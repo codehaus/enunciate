@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * @author Ryan Heaton
  */
-ipublic class OAuthTokenProcessingFilter extends OAuthProcessingFilter {
+public class OAuthTokenProcessingFilter extends OAuthProcessingFilter {
 
   protected void onValidSignature(Map<String, String> params, HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
     //signature is verified; create the token, send the response.
