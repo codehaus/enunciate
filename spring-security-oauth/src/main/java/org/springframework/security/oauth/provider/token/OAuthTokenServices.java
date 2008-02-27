@@ -1,6 +1,6 @@
 package org.springframework.security.oauth.provider.token;
 
-import org.springframework.security.oauth.common.OAuthToken;
+import org.acegisecurity.Authentication;
 import org.acegisecurity.AuthenticationException;
 
 /**
@@ -9,14 +9,13 @@ import org.acegisecurity.AuthenticationException;
 public interface OAuthTokenServices {
 
   /**
-   * Read a token by its value for the given consumer key.
+   * Read a token by its value.
    *
    * @param token The token value.
-   * @param consumerKey The consumer key.
    * @return The token.
-   * @throws AuthenticationException If the token is invalid or expired for the specified consumer.
+   * @throws AuthenticationException If the token is invalid, expired, or disabled.
    */
-  OAuthToken getToken(String token, String consumerKey) throws AuthenticationException;
+  OAuthToken getToken(String token) throws AuthenticationException;
 
   /**
    * Create an unauthorized OAuth request token.
@@ -28,39 +27,30 @@ public interface OAuthTokenServices {
   OAuthToken createUnauthorizedRequestToken(String consumerKey) throws AuthenticationException;
 
   /**
-   * Authorize the specified request token for the given consumer. After the request token is authorized, the consumer will be able to
-   * use it to obtain an access token.
+   * Authorize the specified request token with the specified authentication credentials. After the
+   * request token is authorized, the consumer to which that request token was issued will be able
+   * to use it to obtain an access token.
    *
    * @param requestToken The request token.
-   * @param consumerKey The consumer key.
-   * @throws AuthenticationException If the consumer isn't valid for the given token or if the token is expired or otherwise unauthorizable.
+   * @param authentication The authentication credentials with which to authorize the request token. This is the
+   * authentication of the <i>user</i> who has signed in and is authorizing the consumer to have access to a
+   * protected resource. This same authentication can be pulled from the security context, but it's passed explicitly
+   * here to suggest to the method implementation that it needs to take into account what authorities are being
+   * granted to the consumer by the user.
+   * @throws AuthenticationException If the token is expired or otherwise unauthorizable, or if the
+   * authentication credentials are insufficient.
    */
-  void authorizeRequestToken(String requestToken, String consumerKey) throws AuthenticationException;
+  void authorizeRequestToken(String requestToken, Authentication authentication) throws AuthenticationException;
 
   /**
-   * Whether the specified request token is authorized for the specified consumer.
+   * Create an OAuth access token given the specified request token. This token will be used to provide
+   * access to a protected resource. After the access token is created, the request token should be invalidated.
    *
-   * @param requestToken The request token.
-   * @param consumerKey The consumer key.
-   * @return The request token.
-   */
-  boolean isAuthorizedRequestToken(String requestToken, String consumerKey);
-
-  /**
-   * Create an OAuth access token. This token will be used to provide access to a protected resource.
-   *
-   * @param consumerKey The consumer key for which to create the token.
+   * @param requestToken The (presumably authorized) request token used to create the access token.
    * @return The access token.
-   * @throws AuthenticationException If the consumer isn't valid or otherwise isn't allowed to create an access token.
+   * @throws AuthenticationException If the request token is expired or disabled or doesn't reference the necessary authentication
+   *                                 credentials or otherwise isn't authorized.
    */
-  OAuthToken createAccessToken(String consumerKey) throws AuthenticationException;
+  OAuthAccessToken createAccessToken(String requestToken) throws AuthenticationException;
 
-  /**
-   * Whether the specified access token is valid for the given consumer.
-   *
-   * @param accessToken The access token.
-   * @param consumerKey The consumer key.
-   * @return Whether the specified access token is valid for the given consumer.
-   */
-  boolean isValidAccessToken(String accessToken, String consumerKey);
 }

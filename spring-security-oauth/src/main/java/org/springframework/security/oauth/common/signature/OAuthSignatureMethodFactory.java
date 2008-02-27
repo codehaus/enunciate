@@ -1,6 +1,7 @@
 package org.springframework.security.oauth.common.signature;
 
-import org.springframework.security.oauth.common.OAuthToken;
+import org.springframework.security.oauth.provider.token.OAuthTokenImpl;
+import org.springframework.security.oauth.provider.token.OAuthToken;
 
 /**
  * Factory for signature methods.
@@ -14,7 +15,7 @@ public interface OAuthSignatureMethodFactory {
    *
    * @param methodName      The method name.
    * @param signatureSecret The signature secret.
-   * @param token
+   * @param token           The token. Could be null if none has been supplied.
    * @return the signature method.
    * @throws UnsupportedSignatureMethodException If the specified signature method name isn't recognized or supported.
    */

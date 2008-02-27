@@ -46,7 +46,7 @@ public class OAuthUserAuthorizationProcessingFilter extends AbstractProcessingFi
     if (!authentication.isAuthenticated()) {
       throw new UserNotAuthenticatedException("User must be authenticated before authorizing a request token.");
     }
-    getTokenServices().authorizeRequestToken(request.getParameter(getTokenParameterName()), consumerKey);
+    getTokenServices().authorizeRequestToken(request.getParameter(getTokenParameterName()), authentication);
     return authentication;
   }
 

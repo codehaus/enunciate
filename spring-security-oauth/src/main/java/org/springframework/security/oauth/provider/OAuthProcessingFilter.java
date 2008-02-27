@@ -1,35 +1,33 @@
 package org.springframework.security.oauth.provider;
 
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.MessageSourceAware;
-import org.springframework.context.MessageSource;
-import org.springframework.context.support.MessageSourceAccessor;
-import org.springframework.util.Assert;
-import org.springframework.security.oauth.common.OAuthConsumerParameter;
-import org.springframework.security.oauth.common.OAuthToken;
-import org.springframework.security.oauth.common.EmptyOAuthToken;
-import org.springframework.security.oauth.common.signature.SignatureSecret;
-import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
-import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
-import org.springframework.security.oauth.common.signature.CoreOAuthSignatureMethodFactory;
-import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
-import org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceServices;
-import org.springframework.security.oauth.provider.token.OAuthTokenServices;
+import org.acegisecurity.AcegiMessageSource;
 import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.BadCredentialsException;
-import org.acegisecurity.AcegiMessageSource;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.acegisecurity.ui.AuthenticationDetailsSource;
+import org.acegisecurity.ui.AuthenticationDetailsSourceImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceAware;
+import org.springframework.context.support.MessageSourceAccessor;
+import org.springframework.security.oauth.common.OAuthConsumerParameter;
+import org.springframework.security.oauth.common.signature.*;
+import org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceServices;
+import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
+import org.springframework.security.oauth.provider.token.OAuthToken;
+import org.springframework.security.oauth.provider.token.OAuthTokenServices;
+import org.springframework.util.Assert;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * OAuth processing filter. This filter should be applied to requests for OAuth protected resources (see OAuth Core 1.0).<br/><br/>
@@ -47,6 +45,7 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
   private OAuthProviderSupport providerSupport = new CoreOAuthProviderSupport();
   private OAuthSignatureMethodFactory signatureMethodFactory = new CoreOAuthSignatureMethodFactory();
   private OAuthNonceServices nonceServices = new ExpiringTimestampNonceServices();
+  private AuthenticationDetailsSource authenticationDetailsSource = new AuthenticationDetailsSourceImpl();
 
   private OAuthTokenServices tokenServices;
   private ConsumerDetailsService consumerDetailsService;
@@ -80,13 +79,34 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
           throw new BadCredentialsException(messages.getMessage("OAuthProcessingFilter.missingConsumerKey", "Missing consumer key."));
         }
 
+        //load the consumer details.
         ConsumerDetails consumerDetails = getConsumerDetailsService().loadConsumerByConsumerKey(consumerKey);
 
+        //validate the parameters for the consumer.
         validateOAuthParams(consumerDetails, oauthParams);
 
-        validateSignature(consumerDetails, request, oauthParams);
+        //extract the credentials.
+        String token = oauthParams.get(OAuthConsumerParameter.oauth_token.toString());
+        String signatureMethod = oauthParams.get(OAuthConsumerParameter.oauth_signature_method.toString());
+        String signature = oauthParams.get(OAuthConsumerParameter.oauth_signature.toString());
+        String signatureBaseString = getProviderSupport().getSignatureBaseString(request);
+        ConsumerCredentials credentials = new ConsumerCredentials(consumerKey, signature, signatureMethod, signatureBaseString, token);
 
-        onValidSignature(consumerDetails, request, response, chain);
+        //create an authentication request.
+        ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, credentials);
+        authentication.setDetails(getAuthenticationDetailsSource().buildDetails(request));
+
+        //set the authentication request (unauthenticated) into the context.
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        //validate the signature.
+        validateSignature(authentication);
+
+        //mark the authentication request as validated.
+        authentication.setSignatureValidated(true);
+
+        //go.
+        onValidSignature(request, response, chain);
       }
       catch (AuthenticationException ae) {
         fail(request, response, ae);
@@ -98,42 +118,37 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
   }
 
   /**
-   * Validate the signature of the request given the parameters.
+   * Validate the signature of the request given the authentication request.
    *
-   * @param consumerDetails The consumer details.
-   * @param request The request.
-   * @param oauthParams The parameters.
+   * @param authentication The authentication request.
    */
-  protected void validateSignature(ConsumerDetails consumerDetails, HttpServletRequest request, Map<String, String> oauthParams) throws AuthenticationException {
-    String token = oauthParams.get(OAuthConsumerParameter.oauth_token.toString());
-    String signatureMethod = oauthParams.get(OAuthConsumerParameter.oauth_signature_method.toString());
-    String signature = oauthParams.get(OAuthConsumerParameter.oauth_signature.toString());
-    String signatureBaseString = getProviderSupport().getSignatureBaseString(request);
-
-    SignatureSecret secret = consumerDetails.getSignatureSecret();
-    OAuthToken authToken;
+  protected void validateSignature(ConsumerAuthentication authentication) throws AuthenticationException {
+    SignatureSecret secret = authentication.getConsumerDetails().getSignatureSecret();
+    String token = authentication.getConsumerCredentials().getToken();
+    OAuthToken authToken = null;
     if (token != null) {
-      authToken = getTokenServices().getToken(token, consumerKey);
-    }
-    else {
-      //verify the signature of an empty token if the token wasn't supplied in the request.
-      authToken = new EmptyOAuthToken();
+      authToken = getTokenServices().getToken(token);
     }
 
+    String signatureMethod = authentication.getConsumerCredentials().getSignatureMethod();
     OAuthSignatureMethod method = getSignatureMethodFactory().getSignatureMethod(signatureMethod, secret, authToken);
 
+    String signatureBaseString = authentication.getConsumerCredentials().getSignatureBaseString();
+    String signature = authentication.getConsumerCredentials().getSignature();
     method.verify(signatureBaseString, signature);
   }
 
   /**
-   * Logic executed on valid signature. Default implementation continues the chain.
+   * Logic executed on valid signature. The security context can be assumed to hold a verified, authenticated
+   * {@link org.springframework.security.oauth.provider.ConsumerAuthentication}.<br/><br/>
    *
-   * @param consumerDetails The consumer details.
+   * Default implementation continues the chain.
+   *
    * @param request The request.
    * @param response The response
    * @param chain The filter chain.
    */
-  protected abstract void onValidSignature(ConsumerDetails consumerDetails, HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException;
+  protected abstract void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException;
 
   /**
    * Validates the OAuth parameters for the given consumer. Base implementation validates only those parameters
@@ -151,29 +166,29 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
 
     String realm = oauthParams.get("realm");
     if ((realm != null) && (!realm.equals(this.authenticationEntryPoint.getRealmName()))) {
-      throw new BadCredentialsException(messages.getMessage("OAuthProcessingFilter.incorrectRealm",
+      throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.incorrectRealm",
                                                       new Object[]{realm, this.getAuthenticationEntryPoint().getRealmName()},
                                                       "Response realm name '{0}' does not match system realm name of '{1}'"));
     }
 
     String signatureMethod = oauthParams.get(OAuthConsumerParameter.oauth_signature_method.toString());
     if (signatureMethod == null) {
-      throw new BadCredentialsException(messages.getMessage("OAuthProcessingFilter.missingSignatureMethod", "Missing signature method."));
+      throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingSignatureMethod", "Missing signature method."));
     }
 
     String signature = oauthParams.get(OAuthConsumerParameter.oauth_signature.toString());
     if (signature == null) {
-      throw new BadCredentialsException(messages.getMessage("OAuthProcessingFilter.missingSignature", "Missing signature."));
+      throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingSignature", "Missing signature."));
     }
 
     String timestamp = oauthParams.get(OAuthConsumerParameter.oauth_timestamp.toString());
     if (timestamp == null) {
-      throw new BadCredentialsException(messages.getMessage("OAuthProcessingFilter.missingTimestamp", "Missing timestamp."));
+      throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingTimestamp", "Missing timestamp."));
     }
 
     String nonce = oauthParams.get(OAuthConsumerParameter.oauth_nonce.toString());
     if (nonce == null) {
-      throw new BadCredentialsException(messages.getMessage("OAuthProcessingFilter.missingNonce", "Missing nonce."));
+      throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingNonce", "Missing nonce."));
     }
 
     try {
@@ -182,8 +197,11 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
       }
     }
     catch (NumberFormatException e) {
-      throw new BadCredentialsException(messages.getMessage("OAuthProcessingFilter.invalidTimestamp", new Object[] {timestamp}, "Timestamp must be a positive integer. Invalid value: {0}"));
+      throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.invalidTimestamp", new Object[] {timestamp}, "Timestamp must be a positive integer. Invalid value: {0}"));
     }
+
+    //todo: validate no unsupported parameters?
+    //todo: validate no duplicate parameters?
   }
 
   /**
@@ -192,7 +210,7 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
    * @throws org.acegisecurity.AuthenticationException If the timestamp shouldn't be new.
    */
   protected void onNewTimestamp() throws AuthenticationException {
-    throw new BadCredentialsException(messages.getMessage("OAuthProcessingFilter.timestampNotNew", "A new timestamp should not be used in a request for an access token."));
+    throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.timestampNotNew", "A new timestamp should not be used in a request for an access token."));
   }
 
   /**
@@ -202,14 +220,22 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
    * @param response The response.
    * @param failure The failure.
    */
-  protected void fail(ServletRequest request, ServletResponse response, AuthenticationException failure) throws IOException, ServletException {
+  protected void fail(HttpServletRequest request, HttpServletResponse response, AuthenticationException failure) throws IOException, ServletException {
     SecurityContextHolder.getContext().setAuthentication(null);
 
     if (LOG.isDebugEnabled()) {
       LOG.debug(failure);
     }
 
-    authenticationEntryPoint.commence(request, response, failure);
+    if (failure instanceof InvalidOAuthParametersException) {
+      response.sendError(400, failure.getMessage());
+    }
+    else if (failure instanceof UnsupportedSignatureMethodException) {
+      response.sendError(400, failure.getMessage());
+    }
+    else {
+      authenticationEntryPoint.commence(request, response, failure);
+    }
   }
 
   /**
@@ -368,6 +394,24 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
    */
   public void setSignatureMethodFactory(OAuthSignatureMethodFactory signatureMethodFactory) {
     this.signatureMethodFactory = signatureMethodFactory;
+  }
+
+  /**
+   * The authentication details source.
+   *
+   * @return The authentication details source.
+   */
+  public AuthenticationDetailsSource getAuthenticationDetailsSource() {
+    return authenticationDetailsSource;
+  }
+
+  /**
+   * The authentication details source.
+   *
+   * @param authenticationDetailsSource The authentication details source.
+   */
+  public void setAuthenticationDetailsSource(AuthenticationDetailsSource authenticationDetailsSource) {
+    this.authenticationDetailsSource = authenticationDetailsSource;
   }
 
   /**

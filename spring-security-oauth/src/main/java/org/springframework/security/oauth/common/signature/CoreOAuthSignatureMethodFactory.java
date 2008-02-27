@@ -4,7 +4,7 @@ import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.providers.x509.X509AuthenticationToken;
 import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
-import org.springframework.security.oauth.common.OAuthToken;
+import org.springframework.security.oauth.provider.token.OAuthToken;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
@@ -31,7 +31,7 @@ public class CoreOAuthSignatureMethodFactory implements OAuthSignatureMethodFact
       }
 
       String consumerSecret = ((SharedConsumerSecret) signatureSecret).getConsumerSecret();
-      String tokenSecret = token.getSecret();
+      String tokenSecret = token == null ? "" : token.getSecret();
 
       if (consumerSecret == null) {
         consumerSecret = "";

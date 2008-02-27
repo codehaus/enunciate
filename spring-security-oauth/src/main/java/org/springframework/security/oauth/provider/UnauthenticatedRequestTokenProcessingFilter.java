@@ -1,9 +1,10 @@
 package org.springframework.security.oauth.provider;
 
 import org.acegisecurity.AuthenticationException;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthCodec;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
-import org.springframework.security.oauth.common.OAuthToken;
+import org.springframework.security.oauth.provider.token.OAuthToken;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -18,9 +19,14 @@ import java.io.IOException;
  */
 public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProcessingFilter {
 
-  protected void onValidSignature(ConsumerDetails consumerDetails, HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
+  protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
     //signature is verified; create the token, send the response.
-    OAuthToken authToken = createOAuthToken(consumerDetails.getConsumerKey());
+    ConsumerAuthentication authentication = (ConsumerAuthentication) SecurityContextHolder.getContext().getAuthentication();
+    OAuthToken authToken = createOAuthToken(authentication);
+    if (!authToken.getConsumerKey().equals(authentication.getConsumerDetails().getConsumerKey())) {
+      throw new IllegalStateException("The consumer key associated with the created auth token is not valid for the authenticated consumer.");
+    }
+
     String tokenName = OAuthCodec.oauthEncode(OAuthProviderParameter.oauth_token.toString());
     String tokenValue = OAuthCodec.oauthEncode(authToken.getValue());
     String secretName = OAuthCodec.oauthEncode(OAuthProviderParameter.oauth_token_secret.toString());
@@ -40,11 +46,11 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProcessing
   /**
    * Create the OAuth token for the specified consumer key.
    *
-   * @param consumerKey The consumer key.
+   * @param authentication The authentication request.
    * @return The OAuth token.
    */
-  protected OAuthToken createOAuthToken(String consumerKey) {
-    return getTokenServices().createUnauthorizedRequestToken(consumerKey);
+  protected OAuthToken createOAuthToken(ConsumerAuthentication authentication) {
+    return getTokenServices().createUnauthorizedRequestToken(authentication.getConsumerDetails().getConsumerKey());
   }
 
 }
