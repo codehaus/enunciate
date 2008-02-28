@@ -15,11 +15,23 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Processing filter for requests to protected resources.
+ * Processing filter for requests to protected resources. This filter attempts to load the OAuth authentication
+ * request into the security context using a presented access token.  Default behavior of this filter allows
+ * the request to continue even if OAuth credentials are not presented (allowing another filter to potentially
+ * load a different authentication request into the security context). If the protected resource is available
+ * ONLY via OAuth access token, set <code>requireOAuthCredentials</code> to true. 
  *
  * @author Ryan Heaton
  */
 public class ProtectedResourceProcessingFilter extends OAuthProcessingFilter {
+
+  private boolean requireOAuthCredentials = false;
+  private boolean allowAllMethods = true;
+
+  @Override
+  protected boolean allowMethod(String method) {
+    return allowAllMethods || super.allowMethod(method);
+  }
 
   protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
     ConsumerAuthentication authentication = (ConsumerAuthentication) SecurityContextHolder.getContext().getAuthentication();
@@ -42,5 +54,62 @@ public class ProtectedResourceProcessingFilter extends OAuthProcessingFilter {
     if (token == null) {
       throw new BadCredentialsException(messages.getMessage("ProtectedResourceProcessingFilter.missingToken", "Missing auth token."));
     }
+  }
+
+  @Override
+  protected void onNoOAuthCredentials(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws BadCredentialsException, IOException, ServletException {
+    if (isRequireOAuthCredentials()) {
+      super.onNoOAuthCredentials(request, response, chain);
+    }
+    else {
+      chain.doFilter(request, response);
+    }
+  }
+
+  @Override
+  protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
+    return true;
+  }
+
+  @Override
+  public void setFilterProcessesUrl(String filterProcessesUrl) {
+    throw new UnsupportedOperationException("The OAuth protected resource processing filter doesn't support a filter processes URL.");
+  }
+
+  /**
+   * Whether to allow all methods.
+   *
+   * @return Whether to allow all methods.
+   */
+  public boolean isAllowAllMethods() {
+    return allowAllMethods;
+  }
+
+  /**
+   * Whether to allow all methods.
+   *
+   * @param allowAllMethods Whether to allow all methods.
+   */
+  public void setAllowAllMethods(boolean allowAllMethods) {
+    this.allowAllMethods = allowAllMethods;
+  }
+
+  /**
+   * Whether to require OAuth credentials for a given resource. Default value is "false", which allows an attempt
+   * to access the protected resource without loading the credentials from an OAuth access token.
+   *
+   * @return Whether to require OAuth credentials for a given resource.
+   */
+  public boolean isRequireOAuthCredentials() {
+    return requireOAuthCredentials;
+  }
+
+  /**
+   * Whether to require OAuth credentials for a given resource.
+   *
+   * @param requireOAuthCredentials Whether to require OAuth credentials for a given resource.
+   */
+  public void setRequireOAuthCredentials(boolean requireOAuthCredentials) {
+    this.requireOAuthCredentials = requireOAuthCredentials;
   }
 }

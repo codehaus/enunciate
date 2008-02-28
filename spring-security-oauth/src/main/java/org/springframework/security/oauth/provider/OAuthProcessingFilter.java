@@ -41,7 +41,7 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
   private final List<String> allowedMethods = new ArrayList<String>(Arrays.asList("GET", "POST"));
   private OAuthProcessingFilterEntryPoint authenticationEntryPoint = new OAuthProcessingFilterEntryPoint();
   protected MessageSourceAccessor messages = AcegiMessageSource.getAccessor();
-  private String filterProcessesUrl = "/oauth_access_token";
+  private String filterProcessesUrl = "/oauth_filter";
   private OAuthProviderSupport providerSupport = new CoreOAuthProviderSupport();
   private OAuthSignatureMethodFactory signatureMethodFactory = new CoreOAuthSignatureMethodFactory();
   private OAuthNonceServices nonceServices = new ExpiringTimestampNonceServices();
@@ -65,14 +65,18 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
     HttpServletRequest request = (HttpServletRequest) servletRequest;
     HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-    if (requiresAuthentication(request)) {
-      if (!allowedMethods.contains(request.getMethod().toUpperCase())) {
+    if (requiresAuthentication(request, response, chain)) {
+      if (!allowMethod(request.getMethod().toUpperCase())) {
         response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         return;
       }
 
       try {
         Map<String, String> oauthParams = getProviderSupport().parseParameters(request);
+
+        if (oauthParams.isEmpty()) {
+          onNoOAuthCredentials();
+        }
 
         String consumerKey = oauthParams.get(OAuthConsumerParameter.oauth_consumer_key.toString());
         if (consumerKey == null) {
@@ -115,6 +119,28 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
     else {
       chain.doFilter(servletRequest, servletResponse);
     }
+  }
+
+  /**
+   * What to do when no OAuth credentials were found in the request. Default implementation {@link #fail(javax.servlet.http.HttpServletRequest,
+   * javax.servlet.http.HttpServletResponse, org.acegisecurity.AuthenticationException) fails}.
+   *
+   * @param request The request.
+   * @param response The response.
+   * @param chain The filter chain.
+   */
+  protected void onNoOAuthCredentials(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws BadCredentialsException, IOException, ServletException {
+    fail(request, response, new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingCredentials", "Missing OAuth consumer credentials.")));
+  }
+
+  /**
+   * Whether to allow the specified HTTP method.
+   *
+   * @param method The HTTP method to check for allowing.
+   * @return Whether to allow the specified method.
+   */
+  protected boolean allowMethod(String method) {
+    return allowedMethods.contains(method);
   }
 
   /**
@@ -242,9 +268,11 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
    * Whether this filter is configured to process the specified request.
    *
    * @param request The request.
+   * @param response The response
+   * @param filterChain The filter chain 
    * @return Whether this filter is configured to process the specified request.
    */
-  protected boolean requiresAuthentication(HttpServletRequest request) {
+  protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
     //copied from org.acegisecurity.ui.AbstractProcessingFilter.requiresAuthentication
     String uri = request.getRequestURI();
     int pathParamIndex = uri.indexOf(';');

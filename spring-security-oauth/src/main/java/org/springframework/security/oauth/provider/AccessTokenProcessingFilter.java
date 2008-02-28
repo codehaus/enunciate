@@ -14,6 +14,10 @@ import java.util.Map;
  */
 public class AccessTokenProcessingFilter extends UnauthenticatedRequestTokenProcessingFilter {
 
+  public AccessTokenProcessingFilter() {
+    setFilterProcessesUrl("/oauth_access_token");
+  }
+
   @Override
   protected OAuthToken createOAuthToken(ConsumerAuthentication authentication) {
     return getTokenServices().createAccessToken(authentication.getConsumerCredentials().getToken());

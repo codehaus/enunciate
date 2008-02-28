@@ -38,7 +38,7 @@ public class TestOAuthProcessingFilter extends TestCase {
     Arrays.fill(triggers, false);
     OAuthProcessingFilter filter = new OAuthProcessingFilter() {
       @Override
-      protected boolean requiresAuthentication(HttpServletRequest request) {
+      protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
         return true;
       }
 
