@@ -5,7 +5,7 @@ package org.springframework.security.oauth.common.signature;
  *
  * @author Ryan Heaton
  */
-public class SharedConsumerSecret {
+public class SharedConsumerSecret implements SignatureSecret {
 
   private final String consumerSecret;
 

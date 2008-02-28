@@ -108,7 +108,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
     url = oauthEncode(url);
 
     String method = request.getMethod().toUpperCase();
-    return new StringBuilder(method).append('&').append(url).append('&').append(queryString).toString();
+    return new StringBuilder(method).append('&').append(url).append('&').append(oauthEncode(queryString.toString())).toString();
   }
 
   /**

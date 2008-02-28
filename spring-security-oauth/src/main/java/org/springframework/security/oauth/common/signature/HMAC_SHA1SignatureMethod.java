@@ -111,6 +111,14 @@ public class HMAC_SHA1SignatureMethod implements OAuthSignatureMethod {
     catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
     }
+  }
 
+  /**
+   * The secret key.
+   *
+   * @return The secret key.
+   */
+  public SecretKey getSecretKey() {
+    return key;
   }
 }

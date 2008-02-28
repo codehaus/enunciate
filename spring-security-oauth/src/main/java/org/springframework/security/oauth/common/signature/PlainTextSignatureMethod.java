@@ -56,4 +56,13 @@ public class PlainTextSignatureMethod implements OAuthSignatureMethod {
       throw new InvalidSignatureException("Invalid signature for signature method " + getName());
     }
   }
+
+  /**
+   * The secret.
+   *
+   * @return The secret.
+   */
+  public String getSecret() {
+    return secret;
+  }
 }

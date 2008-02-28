@@ -77,15 +77,16 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
    * Whether the auth token is expired.
    *
    * @param authToken The auth token to check for expiration.
+   * @return Whether the auth token is expired. 
    */
   protected boolean isExpired(OAuthTokenImpl authToken) {
     if (authToken.isAccessToken()) {
-      if ((authToken.getTimestamp() + getAccessTokenValiditySeconds()) < System.currentTimeMillis()) {
+      if ((authToken.getTimestamp() + (getAccessTokenValiditySeconds() * 1000)) < System.currentTimeMillis()) {
         return true;
       }
     }
     else {
-      if ((authToken.getTimestamp() + getRequestTokenValiditySeconds()) < System.currentTimeMillis()) {
+      if ((authToken.getTimestamp() + (getRequestTokenValiditySeconds() * 1000)) < System.currentTimeMillis()) {
         return true;
       }
     }

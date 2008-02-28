@@ -12,7 +12,7 @@ public class ConsumerAuthentication extends AbstractAuthenticationToken {
 
   private final ConsumerDetails consumerDetails;
   private final ConsumerCredentials consumerCredentials;
-  private GrantedAuthority[] grantedAuthorities;
+  protected GrantedAuthority[] grantedAuthorities;
   private boolean signatureValidated = false;
 
   public ConsumerAuthentication(ConsumerDetails consumerDetails, ConsumerCredentials consumerCredentials) {

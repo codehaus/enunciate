@@ -93,5 +93,58 @@ public class CoreOAuthSignatureMethodFactory implements OAuthSignatureMethodFact
 
     throw new UnsupportedSignatureMethodException("Unsupported signature method: " + methodName);    
   }
-  
+
+  /**
+   * Whether to support the plain text signature method.
+   *
+   * @return Whether to support the plain text signature method.
+   */
+  public boolean isSupportPlainText() {
+    return supportPlainText;
+  }
+
+  /**
+   * Whether to support the plain text signature method.
+   *
+   * @param supportPlainText Whether to support the plain text signature method.
+   */
+  public void setSupportPlainText(boolean supportPlainText) {
+    this.supportPlainText = supportPlainText;
+  }
+
+  /**
+   * Whether to support HMAC-SHA1 signature method.
+   *
+   * @return Whether to support HMAC-SHA1 signature method.
+   */
+  public boolean isSupportHMAC_SHA1() {
+    return supportHMAC_SHA1;
+  }
+
+  /**
+   * Whether to support HMAC-SHA1 signature method.
+   *
+   * @param supportHMAC_SHA1 Whether to support HMAC-SHA1 signature method.
+   */
+  public void setSupportHMAC_SHA1(boolean supportHMAC_SHA1) {
+    this.supportHMAC_SHA1 = supportHMAC_SHA1;
+  }
+
+  /**
+   * Whether to support RSA-SHA1 signature method.
+   *
+   * @return Whether to support RSA-SHA1 signature method.
+   */
+  public boolean isSupportRSA_SHA1() {
+    return supportRSA_SHA1;
+  }
+
+  /**
+   * Whether to support RSA-SHA1 signature method.
+   *
+   * @param supportRSA_SHA1 Whether to support RSA-SHA1 signature method.
+   */
+  public void setSupportRSA_SHA1(boolean supportRSA_SHA1) {
+    this.supportRSA_SHA1 = supportRSA_SHA1;
+  }
 }

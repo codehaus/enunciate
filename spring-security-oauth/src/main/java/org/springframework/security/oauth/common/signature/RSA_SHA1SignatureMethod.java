@@ -125,7 +125,7 @@ public class RSA_SHA1SignatureMethod implements OAuthSignatureMethod {
       byte[] signatureBytes = Base64.decodeBase64(signature.getBytes("UTF-8"));
       Signature verifier = Signature.getInstance("SHA1withRSA");
       verifier.initVerify(publicKey);
-      verifier.update(signatureBytes);
+      verifier.update(signatureBaseString.getBytes("UTF-8"));
       if (!verifier.verify(signatureBytes)) {
         throw new InvalidSignatureException("Invalid signature for signature method " + getName());
       }
@@ -145,5 +145,23 @@ public class RSA_SHA1SignatureMethod implements OAuthSignatureMethod {
     catch (SignatureException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  /**
+   * The private key.
+   *
+   * @return The private key.
+   */
+  public PrivateKey getPrivateKey() {
+    return privateKey;
+  }
+
+  /**
+   * The private key.
+   *
+   * @return The private key.
+   */
+  public PublicKey getPublicKey() {
+    return publicKey;
   }
 }

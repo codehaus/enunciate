@@ -32,6 +32,7 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProcessing
     String secretName = OAuthCodec.oauthEncode(OAuthProviderParameter.oauth_token_secret.toString());
     String secretValue = OAuthCodec.oauthEncode(authToken.getSecret());
     StringBuilder responseValue = new StringBuilder(tokenName).append('=').append(tokenValue);
+    responseValue.append('&');
     responseValue.append(secretName).append('=').append(secretValue);
     response.setContentType("application/x-www-form-urlencoded");
     response.getWriter().print(responseValue.toString());
