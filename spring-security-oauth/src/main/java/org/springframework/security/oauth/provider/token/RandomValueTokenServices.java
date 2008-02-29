@@ -102,7 +102,7 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
     OAuthTokenImpl token = new OAuthTokenImpl();
     token.setAccessToken(false);
     token.setConsumerKey(consumerKey);
-    token.setGrantedAuthorities(null);
+    token.setUserAuthentication(null);
     token.setSecret(secret);
     token.setValue(tokenValue);
     token.setTimestamp(System.currentTimeMillis());
@@ -116,11 +116,7 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
       throw new InvalidOAuthTokenException("Request to authorize an access token.");
     }
 
-    GrantedAuthority[] authorities = authentication.getAuthorities();
-    if (authorities == null) {
-      authorities = new GrantedAuthority[0];
-    }
-    authToken.setGrantedAuthorities(authorities);
+    authToken.setUserAuthentication(authentication);
     authToken.setTimestamp(System.currentTimeMillis());//reset the expiration.
     storeToken(requestToken, authToken);
   }
@@ -130,7 +126,7 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
     if (authToken.isAccessToken()) {
       throw new InvalidOAuthTokenException("Not a request token.");
     }
-    else if (authToken.getGrantedAuthorities() == null) {
+    else if (authToken.getUserAuthentication() == null) {
       throw new InvalidOAuthTokenException("Request token has not been authorized.");
     }
 
@@ -143,7 +139,7 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
     OAuthTokenImpl token = new OAuthTokenImpl();
     token.setAccessToken(true);
     token.setConsumerKey(authToken.getConsumerKey());
-    token.setGrantedAuthorities(authToken.getGrantedAuthorities());
+    token.setUserAuthentication(authToken.getUserAuthentication());
     token.setSecret(secret);
     token.setValue(tokenValue);
     token.setTimestamp(System.currentTimeMillis());

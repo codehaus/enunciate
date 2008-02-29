@@ -27,10 +27,9 @@ public interface ConsumerDetails extends Serializable {
   SignatureSecret getSignatureSecret();
 
   /**
-   * Get the authorities that are granted to the OAuth consumer.  This does NOT include the authorities
+   * Get the authorities that are granted to the OAuth consumer.  Not the these are NOT the authorities
    * that are granted to the consumer with a user-authorized access token. Instead, these authorities are
-   * inherent to the consumer itself (i.e. the "base" authorities).  The authorities of the user-authorized
-   * access token will be added to these authorities during a request for a protected resource.
+   * inherent to the consumer itself.
    *
    * @return The authorities.
    */

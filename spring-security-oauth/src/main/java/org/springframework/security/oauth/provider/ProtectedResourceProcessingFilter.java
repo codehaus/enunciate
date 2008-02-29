@@ -1,7 +1,8 @@
 package org.springframework.security.oauth.provider;
 
 import org.acegisecurity.BadCredentialsException;
-import org.acegisecurity.GrantedAuthority;
+import org.acegisecurity.AuthenticationException;
+import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.provider.token.OAuthAccessToken;
@@ -25,7 +26,6 @@ import java.util.Map;
  */
 public class ProtectedResourceProcessingFilter extends OAuthProcessingFilter {
 
-  private boolean requireOAuthCredentials = false;
   private boolean allowAllMethods = true;
 
   @Override
@@ -40,8 +40,8 @@ public class ProtectedResourceProcessingFilter extends OAuthProcessingFilter {
       throw new IllegalStateException("Token should be an access token.");
     }
     else {
-      GrantedAuthority[] grantedAuthorities = ((OAuthAccessToken) authToken).getGrantedAuthorities();
-      authentication.grantAuthorities(grantedAuthorities);
+      Authentication userAuthentication = ((OAuthAccessToken) authToken).getUserAuthentication();
+      SecurityContextHolder.getContext().setAuthentication(userAuthentication);
     }
     chain.doFilter(request, response);
   }
@@ -53,16 +53,6 @@ public class ProtectedResourceProcessingFilter extends OAuthProcessingFilter {
     String token = oauthParams.get(OAuthConsumerParameter.oauth_token.toString());
     if (token == null) {
       throw new BadCredentialsException(messages.getMessage("ProtectedResourceProcessingFilter.missingToken", "Missing auth token."));
-    }
-  }
-
-  @Override
-  protected void onNoOAuthCredentials(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws BadCredentialsException, IOException, ServletException {
-    if (isRequireOAuthCredentials()) {
-      super.onNoOAuthCredentials(request, response, chain);
-    }
-    else {
-      chain.doFilter(request, response);
     }
   }
 
@@ -94,22 +84,4 @@ public class ProtectedResourceProcessingFilter extends OAuthProcessingFilter {
     this.allowAllMethods = allowAllMethods;
   }
 
-  /**
-   * Whether to require OAuth credentials for a given resource. Default value is "false", which allows an attempt
-   * to access the protected resource without loading the credentials from an OAuth access token.
-   *
-   * @return Whether to require OAuth credentials for a given resource.
-   */
-  public boolean isRequireOAuthCredentials() {
-    return requireOAuthCredentials;
-  }
-
-  /**
-   * Whether to require OAuth credentials for a given resource.
-   *
-   * @param requireOAuthCredentials Whether to require OAuth credentials for a given resource.
-   */
-  public void setRequireOAuthCredentials(boolean requireOAuthCredentials) {
-    this.requireOAuthCredentials = requireOAuthCredentials;
-  }
 }

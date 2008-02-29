@@ -1,18 +1,18 @@
 package org.springframework.security.oauth.provider;
 
 import junit.framework.TestCase;
+import org.acegisecurity.Authentication;
 import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.BadCredentialsException;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.ui.AuthenticationDetailsSource;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
+import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
 import org.springframework.security.oauth.common.signature.SignatureSecret;
-import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
 import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
-import org.springframework.security.oauth.provider.token.OAuthTokenServices;
 import org.springframework.security.oauth.provider.token.OAuthToken;
+import org.springframework.security.oauth.provider.token.OAuthTokenServices;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -60,6 +60,16 @@ public class TestOAuthProcessingFilter extends TestCase {
       protected void fail(HttpServletRequest request, HttpServletResponse response, AuthenticationException failure) throws IOException, ServletException {
         throw failure;
       }
+
+      @Override
+      protected Object createDetails(HttpServletRequest request, ConsumerDetails consumerDetails) {
+        return null;
+      }
+
+      @Override
+      protected void resetPreviousAuthentication(Authentication previousAuthentication) {
+        //no-op
+      }
     };
 
     OAuthProviderSupport providerSupport = createMock(OAuthProviderSupport.class);
@@ -67,14 +77,12 @@ public class TestOAuthProcessingFilter extends TestCase {
     OAuthNonceServices nonceServices = createMock(OAuthNonceServices.class);
     OAuthSignatureMethodFactory signatureFactory = createMock(OAuthSignatureMethodFactory.class);
     OAuthTokenServices tokenServices = createMock(OAuthTokenServices.class);
-    AuthenticationDetailsSource detailsSource = createMock(AuthenticationDetailsSource.class);
 
     filter.setProviderSupport(providerSupport);
     filter.setConsumerDetailsService(consumerDetailsService);
     filter.setNonceServices(nonceServices);
     filter.setSignatureMethodFactory(signatureFactory);
     filter.setTokenServices(tokenServices);
-    filter.setAuthenticationDetailsSource(detailsSource);
 
     HttpServletRequest request = createMock(HttpServletRequest.class);
     HttpServletResponse response = createMock(HttpServletResponse.class);
@@ -82,10 +90,10 @@ public class TestOAuthProcessingFilter extends TestCase {
 
     expect(request.getMethod()).andReturn("DELETE");
     response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-    replay(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, detailsSource);
+    replay(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices);
     filter.doFilter(request, response, filterChain);
-    verify(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, detailsSource);
-    reset(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, detailsSource);
+    verify(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices);
+    reset(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices);
     assertFalse(triggers[0]);
     assertFalse(triggers[1]);
     Arrays.fill(triggers, false);
@@ -93,14 +101,14 @@ public class TestOAuthProcessingFilter extends TestCase {
     expect(request.getMethod()).andReturn("GET");
     HashMap<String, String> requestParams = new HashMap<String, String>();
     expect(providerSupport.parseParameters(request)).andReturn(requestParams);
-    replay(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, detailsSource);
+    replay(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices);
     try {
       filter.doFilter(request, response, filterChain);
       fail("should have required a consumer key.");
     }
     catch (BadCredentialsException e) {
-      verify(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, detailsSource);
-      reset(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, detailsSource);
+      verify(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices);
+      reset(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices);
       assertFalse(triggers[0]);
       assertFalse(triggers[1]);
       Arrays.fill(triggers, false);
@@ -116,10 +124,8 @@ public class TestOAuthProcessingFilter extends TestCase {
     requestParams.put(OAuthConsumerParameter.oauth_signature_method.toString(), "methodvalue");
     requestParams.put(OAuthConsumerParameter.oauth_signature.toString(), "signaturevalue");
     expect(providerSupport.getSignatureBaseString(request)).andReturn("sigbasestring");
-    Object details = new Object();
-    expect(detailsSource.buildDetails(request)).andReturn(details);
     filterChain.doFilter(null, null);
-    replay(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, consumerDetails, detailsSource);
+    replay(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, consumerDetails);
     filter.doFilter(request, response, filterChain);
     ConsumerAuthentication authentication = (ConsumerAuthentication) SecurityContextHolder.getContext().getAuthentication();
     assertSame(consumerDetails, authentication.getConsumerDetails());
@@ -129,8 +135,8 @@ public class TestOAuthProcessingFilter extends TestCase {
     assertEquals("sigbasestring", authentication.getConsumerCredentials().getSignatureBaseString());
     assertEquals("consumerKey", authentication.getConsumerCredentials().getConsumerKey());
     assertTrue(authentication.isSignatureValidated());
-    verify(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, consumerDetails, detailsSource);
-    reset(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, consumerDetails, detailsSource);
+    verify(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, consumerDetails);
+    reset(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, consumerDetails);
     SecurityContextHolder.getContext().setAuthentication(null);
     assertTrue(triggers[0]);
     assertTrue(triggers[1]);

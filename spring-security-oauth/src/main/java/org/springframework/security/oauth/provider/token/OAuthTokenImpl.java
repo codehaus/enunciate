@@ -1,8 +1,6 @@
 package org.springframework.security.oauth.provider.token;
 
-import org.acegisecurity.GrantedAuthority;
-
-import java.util.Arrays;
+import org.acegisecurity.Authentication;
 
 /**
  * Basic implementation for an OAuth token.
@@ -15,7 +13,7 @@ public class OAuthTokenImpl implements OAuthAccessToken {
   private String secret;
   private String consumerKey;
   private boolean accessToken;
-  private GrantedAuthority[] grantedAuthorities;
+  private Authentication userAuthentication;
   private long timestamp;
 
   /**
@@ -91,21 +89,21 @@ public class OAuthTokenImpl implements OAuthAccessToken {
   }
 
   /**
-   * The authorities granted along with this (presumable) access token.
+   * The authentication of the user who granted the access token.
    *
-   * @return The authorities granted along with this (presumable) access token.
+   * @return The authentication of the user who granted the access token.
    */
-  public GrantedAuthority[] getGrantedAuthorities() {
-    return grantedAuthorities;
+  public Authentication getUserAuthentication() {
+    return userAuthentication;
   }
 
   /**
-   * The authorities granted along with this (presumable) access token.
+   * The authentication of the user who granted the access token.
    *
-   * @param grantedAuthorities The authorities granted along with this (presumable) access token.
+   * @param userAuthentication The authentication of the user who granted the access token.
    */
-  public void setGrantedAuthorities(GrantedAuthority[] grantedAuthorities) {
-    this.grantedAuthorities = grantedAuthorities;
+  public void setUserAuthentication(Authentication userAuthentication) {
+    this.userAuthentication = userAuthentication;
   }
 
   /**
@@ -126,46 +124,4 @@ public class OAuthTokenImpl implements OAuthAccessToken {
     this.timestamp = timestamp;
   }
 
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    OAuthTokenImpl that = (OAuthTokenImpl) o;
-
-    if (accessToken != that.accessToken) {
-      return false;
-    }
-    if (timestamp != that.timestamp) {
-      return false;
-    }
-    if (consumerKey != null ? !consumerKey.equals(that.consumerKey) : that.consumerKey != null) {
-      return false;
-    }
-    if (!Arrays.equals(grantedAuthorities, that.grantedAuthorities)) {
-      return false;
-    }
-    if (secret != null ? !secret.equals(that.secret) : that.secret != null) {
-      return false;
-    }
-    if (value != null ? !value.equals(that.value) : that.value != null) {
-      return false;
-    }
-
-    return true;
-  }
-
-  public int hashCode() {
-    int result;
-    result = (value != null ? value.hashCode() : 0);
-    result = 31 * result + (secret != null ? secret.hashCode() : 0);
-    result = 31 * result + (consumerKey != null ? consumerKey.hashCode() : 0);
-    result = 31 * result + (accessToken ? 1 : 0);
-    result = 31 * result + (grantedAuthorities != null ? Arrays.hashCode(grantedAuthorities) : 0);
-    result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
-    return result;
-  }
 }

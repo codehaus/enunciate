@@ -1,15 +1,17 @@
 package org.springframework.security.oauth.provider.token;
 
-import org.acegisecurity.GrantedAuthority;
+import org.acegisecurity.Authentication;
 
 /**
  * @author Ryan Heaton
  */
 public interface OAuthAccessToken extends OAuthToken {
+
   /**
-   * The authorities granted along with this (presumable) access token.
+   * Get the authentication of the user who authorized the access token.
    *
-   * @return The authorities granted along with this (presumable) access token.
+   * @return the authentication of the user who authorized the access token.
    */
-  GrantedAuthority[] getGrantedAuthorities();
+  Authentication getUserAuthentication();
+
 }

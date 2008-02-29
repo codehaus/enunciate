@@ -12,7 +12,6 @@ public class ConsumerAuthentication extends AbstractAuthenticationToken {
 
   private final ConsumerDetails consumerDetails;
   private final ConsumerCredentials consumerCredentials;
-  protected GrantedAuthority[] grantedAuthorities;
   private boolean signatureValidated = false;
 
   public ConsumerAuthentication(ConsumerDetails consumerDetails, ConsumerCredentials consumerCredentials) {
@@ -21,29 +20,14 @@ public class ConsumerAuthentication extends AbstractAuthenticationToken {
   }
 
   /**
-   * The authorities of a consumer consist of the authorities {@link org.springframework.security.oauth.provider.ConsumerDetails#getAuthorities() inherent
-   * to consumer} and any authorities that have been {@link #grantAuthorities(org.acegisecurity.GrantedAuthority[]) granted} to the consumer via an
-   * OAuth access token.
+   * The authorities of the consumer (these do not include the authorities granted to the consumer with
+   * an authorized request token).
    *
    * @return The authorities of the consumer.
    */
   @Override
   public GrantedAuthority[] getAuthorities() {
-    return this.grantedAuthorities == null ? getConsumerDetails().getAuthorities() : join(getConsumerDetails().getAuthorities(), this.grantedAuthorities);
-  }
-
-  /**
-   * Grant additional authorities to the authenticated consumer, e.g. from an OAuth access token.
-   *
-   * @param authorities The authorities to grant.
-   * @throws IllegalStateException if the signature hasn't been validated.
-   */
-  public void grantAuthorities(GrantedAuthority[] authorities) {
-    if (!isSignatureValidated()) {
-      throw new IllegalStateException("Cannot grant additional authorities: consumer signature hasn't been validated.");
-    }
-
-    this.grantedAuthorities = authorities;
+    return getConsumerDetails().getAuthorities();
   }
 
   /**
@@ -131,10 +115,4 @@ public class ConsumerAuthentication extends AbstractAuthenticationToken {
     setSignatureValidated(authenticated);
   }
 
-  private static GrantedAuthority[] join(GrantedAuthority[] consumerAuthorities, GrantedAuthority[] grantedAuthorities) {
-    GrantedAuthority[] result = new GrantedAuthority[consumerAuthorities.length + grantedAuthorities.length];
-    System.arraycopy(consumerAuthorities, 0, result, 0, consumerAuthorities.length);
-    System.arraycopy(grantedAuthorities, 0, result, consumerAuthorities.length - 1, grantedAuthorities.length);
-    return result;
-  }
 }
