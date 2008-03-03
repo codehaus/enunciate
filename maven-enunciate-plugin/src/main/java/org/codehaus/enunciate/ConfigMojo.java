@@ -421,9 +421,9 @@ public class ConfigMojo extends AbstractMojo {
         setCompileDir(createTempDir());
       }
 
-      String outputDir = springAppModule.getCompileDir().getAbsolutePath();
-      getLog().info("Setting 'build.outputDirectory' to " + outputDir);
-      project.getBuild().setOutputDirectory(outputDir);
+      String outputDir = project.getBuild().getOutputDirectory();
+      getLog().info("Setting the compile directory for the spring module to " + outputDir);
+      springAppModule.setCompileDir(new File(outputDir));
     }
 
     @Override
