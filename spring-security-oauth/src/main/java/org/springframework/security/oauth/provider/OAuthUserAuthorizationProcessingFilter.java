@@ -6,7 +6,8 @@ import org.acegisecurity.BadCredentialsException;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.ui.AbstractProcessingFilter;
 import org.springframework.util.Assert;
-import org.springframework.security.oauth.provider.token.OAuthTokenServices;
+import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
+import org.springframework.security.oauth.common.UserNotAuthenticatedException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +20,7 @@ import java.io.IOException;
  */
 public class OAuthUserAuthorizationProcessingFilter extends AbstractProcessingFilter {
 
-  private OAuthTokenServices tokenServices;
+  private OAuthProviderTokenServices tokenServices;
   private String tokenIdParameterName = "oauth_token";
   private String callbackParameterName = "oauth_callback";
 
@@ -111,7 +112,7 @@ public class OAuthUserAuthorizationProcessingFilter extends AbstractProcessingFi
    *
    * @return The OAuth token services.
    */
-  public OAuthTokenServices getTokenServices() {
+  public OAuthProviderTokenServices getTokenServices() {
     return tokenServices;
   }
 
@@ -120,7 +121,7 @@ public class OAuthUserAuthorizationProcessingFilter extends AbstractProcessingFi
    *
    * @param tokenServices The OAuth token services.
    */
-  public void setTokenServices(OAuthTokenServices tokenServices) {
+  public void setTokenServices(OAuthProviderTokenServices tokenServices) {
     this.tokenServices = tokenServices;
   }
 

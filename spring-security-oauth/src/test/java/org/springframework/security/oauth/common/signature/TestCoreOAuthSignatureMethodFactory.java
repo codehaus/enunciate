@@ -1,7 +1,7 @@
 package org.springframework.security.oauth.common.signature;
 
 import junit.framework.TestCase;
-import org.springframework.security.oauth.provider.token.OAuthTokenImpl;
+import org.springframework.security.oauth.provider.token.OAuthProviderTokenImpl;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Arrays;
@@ -18,11 +18,11 @@ public class TestCoreOAuthSignatureMethodFactory extends TestCase {
    */
   public void testGetSignatureMethod() throws Exception {
     CoreOAuthSignatureMethodFactory factory = new CoreOAuthSignatureMethodFactory();
-    OAuthTokenImpl token = new OAuthTokenImpl();
+    OAuthProviderTokenImpl token = new OAuthProviderTokenImpl();
     token.setSecret("token_SHHHHHHHHHHHHHH");
     SharedConsumerSecret sharedSecret = new SharedConsumerSecret("consumer_shhhhhhhhhh");
     try {
-      factory.getSignatureMethod("unknown", sharedSecret, token);
+      factory.getSignatureMethod("unknown", sharedSecret, token.getSecret());
       fail("should fail with unknown signature method.");
     }
     catch (UnsupportedSignatureMethodException e) {
@@ -30,7 +30,7 @@ public class TestCoreOAuthSignatureMethodFactory extends TestCase {
     }
 
     try {
-      factory.getSignatureMethod(PlainTextSignatureMethod.SIGNATURE_NAME, sharedSecret, token);
+      factory.getSignatureMethod(PlainTextSignatureMethod.SIGNATURE_NAME, sharedSecret, token.getSecret());
       fail("plain text shouldn't be supported by default.");
     }
     catch (UnsupportedSignatureMethodException e) {
@@ -38,11 +38,11 @@ public class TestCoreOAuthSignatureMethodFactory extends TestCase {
     }
 
     factory.setSupportPlainText(true);
-    OAuthSignatureMethod signatureMethod = factory.getSignatureMethod(PlainTextSignatureMethod.SIGNATURE_NAME, sharedSecret, token);
+    OAuthSignatureMethod signatureMethod = factory.getSignatureMethod(PlainTextSignatureMethod.SIGNATURE_NAME, sharedSecret, token.getSecret());
     assertTrue(signatureMethod instanceof PlainTextSignatureMethod);
     assertEquals("consumer_shhhhhhhhhh%26token_SHHHHHHHHHHHHHH", ((PlainTextSignatureMethod) signatureMethod).getSecret());
 
-    signatureMethod = factory.getSignatureMethod(HMAC_SHA1SignatureMethod.SIGNATURE_NAME, sharedSecret, token);
+    signatureMethod = factory.getSignatureMethod(HMAC_SHA1SignatureMethod.SIGNATURE_NAME, sharedSecret, token.getSecret());
     assertTrue(signatureMethod instanceof HMAC_SHA1SignatureMethod);
     SecretKeySpec spec = new SecretKeySpec("consumer_shhhhhhhhhh&token_SHHHHHHHHHHHHHH".getBytes("UTF-8"), HMAC_SHA1SignatureMethod.MAC_NAME);
     assertTrue(Arrays.equals(spec.getEncoded(), ((HMAC_SHA1SignatureMethod) signatureMethod).getSecretKey().getEncoded()));
@@ -50,7 +50,7 @@ public class TestCoreOAuthSignatureMethodFactory extends TestCase {
     KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
     generator.initialize(1024);
     KeyPair keyPair = generator.generateKeyPair();
-    signatureMethod = factory.getSignatureMethod(RSA_SHA1SignatureMethod.SIGNATURE_NAME, new RSAKeySecret(keyPair.getPrivate(), keyPair.getPublic()), token);
+    signatureMethod = factory.getSignatureMethod(RSA_SHA1SignatureMethod.SIGNATURE_NAME, new RSAKeySecret(keyPair.getPrivate(), keyPair.getPublic()), token.getSecret());
     assertTrue(signatureMethod instanceof RSA_SHA1SignatureMethod);
     assertEquals(keyPair.getPrivate(), ((RSA_SHA1SignatureMethod) signatureMethod).getPrivateKey());
     assertEquals(keyPair.getPublic(), ((RSA_SHA1SignatureMethod) signatureMethod).getPublicKey());

@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * @author Ryan Heaton
  */
-public interface OAuthToken extends Serializable {
+public interface OAuthProviderToken extends Serializable {
   /**
    * The value of the token.
    *

@@ -4,7 +4,7 @@ import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthCodec;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
-import org.springframework.security.oauth.provider.token.OAuthToken;
+import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -17,12 +17,16 @@ import java.io.IOException;
  *
  * @author Ryan Heaton
  */
-public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProcessingFilter {
+public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderProcessingFilter {
+
+  public UnauthenticatedRequestTokenProcessingFilter() {
+    setFilterProcessesUrl("/oauth_request_token");
+  }
 
   protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
     //signature is verified; create the token, send the response.
     ConsumerAuthentication authentication = (ConsumerAuthentication) SecurityContextHolder.getContext().getAuthentication();
-    OAuthToken authToken = createOAuthToken(authentication);
+    OAuthProviderToken authToken = createOAuthToken(authentication);
     if (!authToken.getConsumerKey().equals(authentication.getConsumerDetails().getConsumerKey())) {
       throw new IllegalStateException("The consumer key associated with the created auth token is not valid for the authenticated consumer.");
     }
@@ -50,7 +54,7 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProcessing
    * @param authentication The authentication request.
    * @return The OAuth token.
    */
-  protected OAuthToken createOAuthToken(ConsumerAuthentication authentication) {
+  protected OAuthProviderToken createOAuthToken(ConsumerAuthentication authentication) {
     return getTokenServices().createUnauthorizedRequestToken(authentication.getConsumerDetails().getConsumerKey());
   }
 

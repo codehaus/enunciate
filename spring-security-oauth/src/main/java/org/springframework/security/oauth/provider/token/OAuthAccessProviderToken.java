@@ -5,7 +5,7 @@ import org.acegisecurity.Authentication;
 /**
  * @author Ryan Heaton
  */
-public interface OAuthAccessToken extends OAuthToken {
+public interface OAuthAccessProviderToken extends OAuthProviderToken {
 
   /**
    * Get the authentication of the user who authorized the access token.

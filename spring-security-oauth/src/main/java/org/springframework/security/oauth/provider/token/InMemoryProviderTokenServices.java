@@ -15,9 +15,9 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Ryan Heaton
  */
-public class InMemoryTokenServices extends RandomValueTokenServices implements DisposableBean {
+public class InMemoryProviderTokenServices extends RandomValueProviderTokenServices implements DisposableBean {
 
-  protected final ConcurrentHashMap<String, OAuthTokenImpl> tokenStore = new ConcurrentHashMap<String, OAuthTokenImpl>();
+  protected final ConcurrentHashMap<String, OAuthProviderTokenImpl> tokenStore = new ConcurrentHashMap<String, OAuthProviderTokenImpl>();
   private ScheduledExecutorService scheduler;
   private Integer cleanupIntervalSeconds;
 
@@ -33,9 +33,9 @@ public class InMemoryTokenServices extends RandomValueTokenServices implements D
       scheduler = Executors.newSingleThreadScheduledExecutor();
       Runnable cleanupLogic = new Runnable() {
         public void run() {
-          Iterator<Map.Entry<String,OAuthTokenImpl>> entriesIt = tokenStore.entrySet().iterator();
+          Iterator<Map.Entry<String, OAuthProviderTokenImpl>> entriesIt = tokenStore.entrySet().iterator();
           while (entriesIt.hasNext()) {
-            Map.Entry<String, OAuthTokenImpl> entry = entriesIt.next();
+            Map.Entry<String, OAuthProviderTokenImpl> entry = entriesIt.next();
             if (isExpired(entry.getValue())) {
               //there's a race condition here, but we'll live with it for now.
               entriesIt.remove();
@@ -53,11 +53,11 @@ public class InMemoryTokenServices extends RandomValueTokenServices implements D
     }
   }
 
-  protected OAuthTokenImpl readToken(String token) {
+  protected OAuthProviderTokenImpl readToken(String token) {
     return tokenStore.get(token);
   }
 
-  protected void storeToken(String tokenValue, OAuthTokenImpl token) {
+  protected void storeToken(String tokenValue, OAuthProviderTokenImpl token) {
     tokenStore.put(tokenValue, token);
   }
 

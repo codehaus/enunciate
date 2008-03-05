@@ -3,7 +3,7 @@ package org.springframework.security.oauth.provider;
 import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.BadCredentialsException;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
-import org.springframework.security.oauth.provider.token.OAuthToken;
+import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 
 import java.util.Map;
 
@@ -19,7 +19,7 @@ public class AccessTokenProcessingFilter extends UnauthenticatedRequestTokenProc
   }
 
   @Override
-  protected OAuthToken createOAuthToken(ConsumerAuthentication authentication) {
+  protected OAuthProviderToken createOAuthToken(ConsumerAuthentication authentication) {
     return getTokenServices().createAccessToken(authentication.getConsumerCredentials().getToken());
   }
 

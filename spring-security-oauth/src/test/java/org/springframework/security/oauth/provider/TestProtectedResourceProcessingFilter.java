@@ -4,8 +4,8 @@ import junit.framework.TestCase;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
-import org.springframework.security.oauth.provider.token.OAuthAccessToken;
-import org.springframework.security.oauth.provider.token.OAuthTokenServices;
+import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
+import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -28,8 +28,8 @@ public class TestProtectedResourceProcessingFilter extends TestCase {
     ConsumerAuthentication authentication = new ConsumerAuthentication(null, creds);
     authentication.setAuthenticated(true);
     SecurityContextHolder.getContext().setAuthentication(authentication);
-    OAuthTokenServices tokenServices = createMock(OAuthTokenServices.class);
-    OAuthAccessToken token = createMock(OAuthAccessToken.class);
+    OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
+    OAuthAccessProviderToken token = createMock(OAuthAccessProviderToken.class);
     filter.setTokenServices(tokenServices);
 
     expect(tokenServices.getToken("tok")).andReturn(token);

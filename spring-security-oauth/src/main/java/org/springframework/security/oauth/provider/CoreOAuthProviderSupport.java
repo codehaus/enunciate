@@ -3,6 +3,7 @@ package org.springframework.security.oauth.provider;
 import org.acegisecurity.util.StringSplitUtils;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import static org.springframework.security.oauth.common.OAuthCodec.*;
+import org.springframework.security.oauth.consumer.ProtectedResourceDetailsService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -15,6 +16,8 @@ import java.util.*;
  * @author Ryan Heaton
  */
 public class CoreOAuthProviderSupport implements OAuthProviderSupport {
+
+  private ProtectedResourceDetailsService protectedResourceDetailsService;
 
   private final Set<String> supportedOAuthParameters;
   private String baseUrl = null;
@@ -83,7 +86,17 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
       public int compare(Map.Entry<String, String> param1, Map.Entry<String, String> param2) {
         int comparison = param1.getKey().compareTo(param2.getKey());
         if (comparison == 0) {
-          comparison = param1.getValue().compareTo(param2.getValue());
+          String value1 = param1.getValue();
+          if (value1 == null) {
+            value1 = "";
+          }
+
+          String value2 = param2.getValue();
+          if (value2 == null) {
+            value2 = "";
+          }
+
+          comparison = value1.compareTo(value2);
         }
         return comparison;
       }
@@ -94,7 +107,12 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
     StringBuilder queryString = new StringBuilder();
     for (int i = 0; i < sortedParameters.length; i++) {
       Map.Entry<String, String> sortedParameter = sortedParameters[i];
-      queryString.append(sortedParameter.getKey()).append('=').append(sortedParameter.getValue());
+      String parameterValue = sortedParameter.getValue();
+      if (parameterValue == null) {
+        parameterValue = "";
+      }
+      
+      queryString.append(sortedParameter.getKey()).append('=').append(parameterValue);
       if (i + 1 < sortedParameters.length) {
         queryString.append('&');
       }
@@ -105,6 +123,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
       //if no URL is configured, then we'll attempt to reconstruct the URL.  This may be inaccurate.
       url = request.getRequestURL().toString();
     }
+    url = url.toLowerCase();
     url = oauthEncode(url);
 
     String method = request.getMethod().toUpperCase();

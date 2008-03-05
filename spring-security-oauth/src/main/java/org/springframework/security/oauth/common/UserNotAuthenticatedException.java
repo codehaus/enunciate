@@ -1,4 +1,4 @@
-package org.springframework.security.oauth.provider;
+package org.springframework.security.oauth.common;
 
 import org.acegisecurity.AuthenticationException;
 

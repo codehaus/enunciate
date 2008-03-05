@@ -1,9 +1,9 @@
 package org.springframework.security.oauth.provider;
 
 import static org.easymock.EasyMock.*;
-import org.springframework.security.oauth.provider.token.OAuthToken;
-import org.springframework.security.oauth.provider.token.OAuthTokenServices;
-import org.springframework.security.oauth.provider.token.OAuthAccessToken;
+import org.springframework.security.oauth.provider.token.OAuthProviderToken;
+import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
+import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
 import org.acegisecurity.context.SecurityContextHolder;
 
 import junit.framework.TestCase;
@@ -23,10 +23,10 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
    * test onValidSignature
    */
   public void testOnValidSignature() throws Exception {
-    final OAuthToken authToken = createMock(OAuthToken.class);
+    final OAuthProviderToken authToken = createMock(OAuthProviderToken.class);
     UnauthenticatedRequestTokenProcessingFilter filter = new UnauthenticatedRequestTokenProcessingFilter() {
       @Override
-      protected OAuthToken createOAuthToken(ConsumerAuthentication authentication) {
+      protected OAuthProviderToken createOAuthToken(ConsumerAuthentication authentication) {
         return authToken;
       }
     };
@@ -63,8 +63,8 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
     ConsumerDetails consumerDetails = createMock(ConsumerDetails.class);
     ConsumerCredentials creds = new ConsumerCredentials("key", "sig", "meth", "base", "tok");
     ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);
-    OAuthTokenServices tokenServices = createMock(OAuthTokenServices.class);
-    OAuthAccessToken token = createMock(OAuthAccessToken.class);
+    OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
+    OAuthAccessProviderToken token = createMock(OAuthAccessProviderToken.class);
 
     UnauthenticatedRequestTokenProcessingFilter filter = new UnauthenticatedRequestTokenProcessingFilter();
     filter.setTokenServices(tokenServices);

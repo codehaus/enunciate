@@ -11,8 +11,8 @@ import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
 import org.springframework.security.oauth.common.signature.SignatureSecret;
 import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
-import org.springframework.security.oauth.provider.token.OAuthToken;
-import org.springframework.security.oauth.provider.token.OAuthTokenServices;
+import org.springframework.security.oauth.provider.token.OAuthProviderToken;
+import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -36,7 +36,7 @@ public class TestOAuthProcessingFilter extends TestCase {
   public void testDoFilter() throws Exception {
     final boolean[] triggers = new boolean[2];
     Arrays.fill(triggers, false);
-    OAuthProcessingFilter filter = new OAuthProcessingFilter() {
+    OAuthProviderProcessingFilter filter = new OAuthProviderProcessingFilter() {
       @Override
       protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
         return true;
@@ -76,7 +76,7 @@ public class TestOAuthProcessingFilter extends TestCase {
     ConsumerDetailsService consumerDetailsService = createMock(ConsumerDetailsService.class);
     OAuthNonceServices nonceServices = createMock(OAuthNonceServices.class);
     OAuthSignatureMethodFactory signatureFactory = createMock(OAuthSignatureMethodFactory.class);
-    OAuthTokenServices tokenServices = createMock(OAuthTokenServices.class);
+    OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
 
     filter.setProviderSupport(providerSupport);
     filter.setConsumerDetailsService(consumerDetailsService);
@@ -147,7 +147,7 @@ public class TestOAuthProcessingFilter extends TestCase {
    * tests validation of the params.
    */
   public void testValidateParams() throws Exception {
-    OAuthProcessingFilter filter = new OAuthProcessingFilter() {
+    OAuthProviderProcessingFilter filter = new OAuthProviderProcessingFilter() {
       protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
       }
     };
@@ -279,15 +279,15 @@ public class TestOAuthProcessingFilter extends TestCase {
    * test validating the signature.
    */
   public void testValidateSignature() throws Exception {
-    OAuthProcessingFilter filter = new OAuthProcessingFilter() {
+    OAuthProviderProcessingFilter filter = new OAuthProviderProcessingFilter() {
       protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
       }
     };
 
     ConsumerDetails details = createMock(ConsumerDetails.class);
     SignatureSecret secret = createMock(SignatureSecret.class);
-    OAuthTokenServices tokenServices = createMock(OAuthTokenServices.class);
-    OAuthToken token = createMock(OAuthToken.class);
+    OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
+    OAuthProviderToken token = createMock(OAuthProviderToken.class);
     OAuthSignatureMethodFactory sigFactory = createMock(OAuthSignatureMethodFactory.class);
     OAuthSignatureMethod sigMethod = createMock(OAuthSignatureMethod.class);
 
@@ -297,7 +297,7 @@ public class TestOAuthProcessingFilter extends TestCase {
     filter.setTokenServices(tokenServices);
     expect(tokenServices.getToken("token")).andReturn(token);
     filter.setSignatureMethodFactory(sigFactory);
-    expect(sigFactory.getSignatureMethod("method", secret, token)).andReturn(sigMethod);
+    expect(sigFactory.getSignatureMethod("method", secret, token.getSecret())).andReturn(sigMethod);
     sigMethod.verify("base", "sig");
 
     replay(details, secret, tokenServices, token,  sigFactory, sigMethod);

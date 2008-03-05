@@ -18,7 +18,7 @@ import java.security.SecureRandom;
  *
  * @author Ryan Heaton
  */
-public abstract class RandomValueTokenServices implements OAuthTokenServices, InitializingBean {
+public abstract class RandomValueProviderTokenServices implements OAuthProviderTokenServices, InitializingBean {
 
   private Random random;
   private int requestTokenValiditySeconds = 60 * 10; //default 10 minutes.
@@ -31,7 +31,7 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
    * @param token The token to read.
    * @return The token, or null if the token doesn't exist.
    */
-  protected abstract OAuthTokenImpl readToken(String token);
+  protected abstract OAuthProviderTokenImpl readToken(String token);
 
   /**
    * Store a token from persistence.
@@ -39,7 +39,7 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
    * @param tokenValue The token value.
    * @param token The token to store.
    */
-  protected abstract void storeToken(String tokenValue, OAuthTokenImpl token);
+  protected abstract void storeToken(String tokenValue, OAuthProviderTokenImpl token);
 
   /**
    * Remove a token from persistence.
@@ -59,8 +59,8 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
     }
   }
 
-  public OAuthToken getToken(String token) throws AuthenticationException {
-    OAuthTokenImpl authToken = readToken(token);
+  public OAuthProviderToken getToken(String token) throws AuthenticationException {
+    OAuthProviderTokenImpl authToken = readToken(token);
     
     if (authToken == null) {
       throw new InvalidOAuthTokenException("Invalid token: " + token);
@@ -79,7 +79,7 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
    * @param authToken The auth token to check for expiration.
    * @return Whether the auth token is expired. 
    */
-  protected boolean isExpired(OAuthTokenImpl authToken) {
+  protected boolean isExpired(OAuthProviderTokenImpl authToken) {
     if (authToken.isAccessToken()) {
       if ((authToken.getTimestamp() + (getAccessTokenValiditySeconds() * 1000)) < System.currentTimeMillis()) {
         return true;
@@ -94,12 +94,12 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
     return false;
   }
 
-  public OAuthToken createUnauthorizedRequestToken(String consumerKey) throws AuthenticationException {
+  public OAuthProviderToken createUnauthorizedRequestToken(String consumerKey) throws AuthenticationException {
     String tokenValue = UUID.randomUUID().toString();
     byte[] secretBytes = new byte[getTokenSecretLengthBytes()];
     getRandom().nextBytes(secretBytes);
     String secret = new String(Base64.encodeBase64(secretBytes));
-    OAuthTokenImpl token = new OAuthTokenImpl();
+    OAuthProviderTokenImpl token = new OAuthProviderTokenImpl();
     token.setAccessToken(false);
     token.setConsumerKey(consumerKey);
     token.setUserAuthentication(null);
@@ -111,7 +111,7 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
   }
 
   public void authorizeRequestToken(String requestToken, Authentication authentication) throws AuthenticationException {
-    OAuthTokenImpl authToken = readToken(requestToken);
+    OAuthProviderTokenImpl authToken = readToken(requestToken);
     if (authToken.isAccessToken()) {
       throw new InvalidOAuthTokenException("Request to authorize an access token.");
     }
@@ -121,8 +121,8 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
     storeToken(requestToken, authToken);
   }
 
-  public OAuthAccessToken createAccessToken(String requestToken) throws AuthenticationException {
-    OAuthTokenImpl authToken = readToken(requestToken);
+  public OAuthAccessProviderToken createAccessToken(String requestToken) throws AuthenticationException {
+    OAuthProviderTokenImpl authToken = readToken(requestToken);
     if (authToken.isAccessToken()) {
       throw new InvalidOAuthTokenException("Not a request token.");
     }
@@ -136,7 +136,7 @@ public abstract class RandomValueTokenServices implements OAuthTokenServices, In
     byte[] secretBytes = new byte[getTokenSecretLengthBytes()];
     getRandom().nextBytes(secretBytes);
     String secret = new String(Base64.encodeBase64(secretBytes));
-    OAuthTokenImpl token = new OAuthTokenImpl();
+    OAuthProviderTokenImpl token = new OAuthProviderTokenImpl();
     token.setAccessToken(true);
     token.setConsumerKey(authToken.getConsumerKey());
     token.setUserAuthentication(authToken.getUserAuthentication());

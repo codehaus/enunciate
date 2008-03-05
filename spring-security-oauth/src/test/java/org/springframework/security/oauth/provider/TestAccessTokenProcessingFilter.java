@@ -1,9 +1,8 @@
 package org.springframework.security.oauth.provider;
 
 import static org.easymock.EasyMock.*;
-import org.springframework.security.oauth.provider.token.OAuthTokenServices;
-import org.springframework.security.oauth.provider.token.OAuthAccessToken;
-import org.acegisecurity.AuthenticationException;
+import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
+import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
 
 import junit.framework.TestCase;
 
@@ -19,8 +18,8 @@ public class TestAccessTokenProcessingFilter extends TestCase {
     ConsumerDetails consumerDetails = createMock(ConsumerDetails.class);
     ConsumerCredentials creds = new ConsumerCredentials("key", "sig", "meth", "base", "tok");
     ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);
-    OAuthTokenServices tokenServices = createMock(OAuthTokenServices.class);
-    OAuthAccessToken token = createMock(OAuthAccessToken.class);
+    OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
+    OAuthAccessProviderToken token = createMock(OAuthAccessProviderToken.class);
 
     AccessTokenProcessingFilter filter = new AccessTokenProcessingFilter();
     filter.setTokenServices(tokenServices);

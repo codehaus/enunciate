@@ -4,7 +4,8 @@ import junit.framework.TestCase;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
-import org.springframework.security.oauth.provider.token.OAuthTokenServices;
+import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
+import org.springframework.security.oauth.common.UserNotAuthenticatedException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,7 +21,7 @@ public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
     OAuthUserAuthorizationProcessingFilter filter = new OAuthUserAuthorizationProcessingFilter();
     HttpServletRequest request = createMock(HttpServletRequest.class);
     Authentication authentication = createMock(Authentication.class);
-    OAuthTokenServices tokenServices = createMock(OAuthTokenServices.class);
+    OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
     expect(authentication.isAuthenticated()).andReturn(false);

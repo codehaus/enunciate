@@ -7,7 +7,7 @@ import org.acegisecurity.Authentication;
  *
  * @author Ryan Heaton
  */
-public class OAuthTokenImpl implements OAuthAccessToken {
+public class OAuthProviderTokenImpl implements OAuthAccessProviderToken {
 
   private String value;
   private String secret;

@@ -6,7 +6,7 @@ import org.acegisecurity.AuthenticationException;
 /**
  * @author Ryan Heaton
  */
-public interface OAuthTokenServices {
+public interface OAuthProviderTokenServices {
 
   /**
    * Read a token by its value.
@@ -15,7 +15,7 @@ public interface OAuthTokenServices {
    * @return The token.
    * @throws AuthenticationException If the token is invalid, expired, or disabled.
    */
-  OAuthToken getToken(String token) throws AuthenticationException;
+  OAuthProviderToken getToken(String token) throws AuthenticationException;
 
   /**
    * Create an unauthorized OAuth request token.
@@ -24,7 +24,7 @@ public interface OAuthTokenServices {
    * @return The token.
    * @throws AuthenticationException If the consumer isn't valid or otherwise isn't allowed to create a new request token.
    */
-  OAuthToken createUnauthorizedRequestToken(String consumerKey) throws AuthenticationException;
+  OAuthProviderToken createUnauthorizedRequestToken(String consumerKey) throws AuthenticationException;
 
   /**
    * Authorize the specified request token with the specified authentication credentials. After the
@@ -51,6 +51,6 @@ public interface OAuthTokenServices {
    * @throws AuthenticationException If the request token is expired or disabled or doesn't reference the necessary authentication
    *                                 credentials or otherwise isn't authorized.
    */
-  OAuthAccessToken createAccessToken(String requestToken) throws AuthenticationException;
+  OAuthAccessProviderToken createAccessToken(String requestToken) throws AuthenticationException;
 
 }

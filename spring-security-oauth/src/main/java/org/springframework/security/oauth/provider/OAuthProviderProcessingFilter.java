@@ -15,8 +15,8 @@ import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.signature.*;
 import org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceServices;
 import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
-import org.springframework.security.oauth.provider.token.OAuthToken;
-import org.springframework.security.oauth.provider.token.OAuthTokenServices;
+import org.springframework.security.oauth.provider.token.OAuthProviderToken;
+import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.util.Assert;
 
 import javax.servlet.*;
@@ -33,7 +33,7 @@ import java.util.Map;
  *
  * @author Ryan Heaton
  */
-public abstract class OAuthProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
+public abstract class OAuthProviderProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
 
   private static final Log LOG = LogFactory.getLog(UnauthenticatedRequestTokenProcessingFilter.class);
   private final List<String> allowedMethods = new ArrayList<String>(Arrays.asList("GET", "POST"));
@@ -45,7 +45,7 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
   private OAuthNonceServices nonceServices = new ExpiringTimestampNonceServices();
   private boolean ignoreMissingCredentials = false;
 
-  private OAuthTokenServices tokenServices;
+  private OAuthProviderTokenServices tokenServices;
   private ConsumerDetailsService consumerDetailsService;
 
   public void afterPropertiesSet() throws Exception {
@@ -160,13 +160,13 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
   protected void validateSignature(ConsumerAuthentication authentication) throws AuthenticationException {
     SignatureSecret secret = authentication.getConsumerDetails().getSignatureSecret();
     String token = authentication.getConsumerCredentials().getToken();
-    OAuthToken authToken = null;
+    OAuthProviderToken authToken = null;
     if (token != null) {
       authToken = getTokenServices().getToken(token);
     }
 
     String signatureMethod = authentication.getConsumerCredentials().getSignatureMethod();
-    OAuthSignatureMethod method = getSignatureMethodFactory().getSignatureMethod(signatureMethod, secret, authToken);
+    OAuthSignatureMethod method = getSignatureMethodFactory().getSignatureMethod(signatureMethod, secret, authToken.getSecret());
 
     String signatureBaseString = authentication.getConsumerCredentials().getSignatureBaseString();
     String signature = authentication.getConsumerCredentials().getSignature();
@@ -359,7 +359,7 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
    *
    * @return The OAuth token services.
    */
-  public OAuthTokenServices getTokenServices() {
+  public OAuthProviderTokenServices getTokenServices() {
     return tokenServices;
   }
 
@@ -368,7 +368,7 @@ public abstract class OAuthProcessingFilter implements Filter, InitializingBean,
    *
    * @param tokenServices The OAuth token services.
    */
-  public void setTokenServices(OAuthTokenServices tokenServices) {
+  public void setTokenServices(OAuthProviderTokenServices tokenServices) {
     this.tokenServices = tokenServices;
   }
 

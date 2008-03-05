@@ -1,12 +1,11 @@
 package org.springframework.security.oauth.provider;
 
 import org.acegisecurity.BadCredentialsException;
-import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
-import org.springframework.security.oauth.provider.token.OAuthAccessToken;
-import org.springframework.security.oauth.provider.token.OAuthToken;
+import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
+import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -24,7 +23,7 @@ import java.util.Map;
  *
  * @author Ryan Heaton
  */
-public class ProtectedResourceProcessingFilter extends OAuthProcessingFilter {
+public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFilter {
 
   private boolean allowAllMethods = true;
 
@@ -35,12 +34,12 @@ public class ProtectedResourceProcessingFilter extends OAuthProcessingFilter {
 
   protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
     ConsumerAuthentication authentication = (ConsumerAuthentication) SecurityContextHolder.getContext().getAuthentication();
-    OAuthToken authToken = getTokenServices().getToken(authentication.getConsumerCredentials().getToken());
+    OAuthProviderToken authToken = getTokenServices().getToken(authentication.getConsumerCredentials().getToken());
     if (!authToken.isAccessToken()) {
       throw new IllegalStateException("Token should be an access token.");
     }
     else {
-      Authentication userAuthentication = ((OAuthAccessToken) authToken).getUserAuthentication();
+      Authentication userAuthentication = ((OAuthAccessProviderToken) authToken).getUserAuthentication();
       SecurityContextHolder.getContext().setAuthentication(userAuthentication);
     }
     chain.doFilter(request, response);
