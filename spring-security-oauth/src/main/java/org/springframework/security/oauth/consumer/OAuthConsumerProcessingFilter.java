@@ -17,6 +17,8 @@ import org.springframework.security.oauth.common.signature.CoreOAuthSignatureMet
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServices;
+import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServicesFactory;
+import org.springframework.security.oauth.consumer.token.HttpSessionBasedTokenServicesFactory;
 import org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceServices;
 import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
 import org.springframework.util.Assert;
@@ -48,12 +50,12 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
   private String accessTokensRequestAttribute = ACCESS_TOKENS_DEFAULT_ATTRIBUTE;
   private PortResolver portResolver = new PortResolverImpl();
 
-  private OAuthConsumerTokenServices tokenServices;
+  private OAuthConsumerTokenServicesFactory tokenServicesFactory = new HttpSessionBasedTokenServicesFactory();
   private ProtectedResourceDetailsService protectedResourceDetailsService;
 
   public void afterPropertiesSet() throws Exception {
     Assert.notNull(OAuthFailureEntryPoint, "An entry point must be configured to handle the case of OAuth failure.");
-    Assert.notNull(tokenServices, "OAuth token services are required.");
+    Assert.notNull(tokenServicesFactory, "OAuth token services factory is required.");
     Assert.notNull(protectedResourceDetailsService, "A protected resource details service is required.");
   }
 
@@ -75,16 +77,17 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
           throw new UserNotAuthenticatedException("Must be authenticated.");
         }
 
+        OAuthConsumerTokenServices tokenServices = getTokenServicesFactory().getTokenServices(authentication, request);
         List<OAuthConsumerToken> tokens = new ArrayList<OAuthConsumerToken>();
         for (String dependency : accessTokenDeps) {
-          OAuthConsumerToken token = getTokenServices().getToken(dependency, authentication);
+          OAuthConsumerToken token = tokenServices.getToken(dependency);
           if (token == null) {
             //obtain authorization.
             ProtectedResourceDetails details = getProtectedResourceDetailsService().loadProtectedResourceDetailsById(dependency);
             OAuthConsumerToken requestToken = getConsumerSupport().getUnauthorizedRequestToken(dependency);
             requestToken.setAccessToken(false);
             requestToken.setResourceId(dependency);
-            getTokenServices().storeToken(dependency, authentication, requestToken);
+            tokenServices.storeToken(dependency, requestToken);
             String callbackURL = response.encodeRedirectURL(getCallbackURL(request));
             String redirect = getUserAuthorizationRedirectURL(details, requestToken, callbackURL);
             response.sendRedirect(redirect);
@@ -96,7 +99,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
               token = getConsumerSupport().getAccessToken(token);
               token.setAccessToken(true);
               token.setResourceId(dependency);
-              getTokenServices().storeToken(dependency, authentication, token);
+              tokenServices.storeToken(dependency, token);
             }
 
             //token already authorized.
@@ -242,21 +245,21 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
   }
 
   /**
-   * Get the OAuth token services.
+   * Get the OAuth token services factory.
    *
-   * @return The OAuth token services.
+   * @return The OAuth token services factory.
    */
-  public OAuthConsumerTokenServices getTokenServices() {
-    return tokenServices;
+  public OAuthConsumerTokenServicesFactory getTokenServicesFactory() {
+    return tokenServicesFactory;
   }
 
   /**
-   * The OAuth token services.
+   * The OAuth token services factory.
    *
-   * @param tokenServices The OAuth token services.
+   * @param tokenServicesFactory The OAuth token services factory.
    */
-  public void setTokenServices(OAuthConsumerTokenServices tokenServices) {
-    this.tokenServices = tokenServices;
+  public void setTokenServicesFactory(OAuthConsumerTokenServicesFactory tokenServicesFactory) {
+    this.tokenServicesFactory = tokenServicesFactory;
   }
 
   /**
