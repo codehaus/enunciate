@@ -83,13 +83,10 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
           OAuthConsumerToken token = tokenServices.getToken(dependency);
           if (token == null) {
             //obtain authorization.
-            ProtectedResourceDetails details = getProtectedResourceDetailsService().loadProtectedResourceDetailsById(dependency);
             OAuthConsumerToken requestToken = getConsumerSupport().getUnauthorizedRequestToken(dependency);
-            requestToken.setAccessToken(false);
-            requestToken.setResourceId(dependency);
             tokenServices.storeToken(dependency, requestToken);
             String callbackURL = response.encodeRedirectURL(getCallbackURL(request));
-            String redirect = getUserAuthorizationRedirectURL(details, requestToken, callbackURL);
+            String redirect = getUserAuthorizationRedirectURL(requestToken, callbackURL);
             response.sendRedirect(redirect);
             return;
           }
@@ -97,8 +94,6 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
             if (!token.isAccessToken()) {
               //authorize the request token and store it.
               token = getConsumerSupport().getAccessToken(token);
-              token.setAccessToken(true);
-              token.setResourceId(dependency);
               tokenServices.storeToken(dependency, token);
             }
 
@@ -132,12 +127,12 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
   /**
    * Get the URL to which to redirect the user for authorization of protected resources.
    *
-   * @param details      The details of the protected resource.
    * @param requestToken The request token.
    * @param callbackURL  The callback URL.
    * @return The URL.
    */
-  protected String getUserAuthorizationRedirectURL(ProtectedResourceDetails details, OAuthConsumerToken requestToken, String callbackURL) {
+  protected String getUserAuthorizationRedirectURL(OAuthConsumerToken requestToken, String callbackURL) {
+    ProtectedResourceDetails details = getProtectedResourceDetailsService().loadProtectedResourceDetailsById(requestToken.getResourceId());
     try {
       String baseURL = details.getUserAuthorizationURL();
       StringBuilder builder = new StringBuilder(baseURL);
@@ -159,7 +154,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    * @param failure  The failure.
    */
   protected void fail(HttpServletRequest request, HttpServletResponse response, AuthenticationException failure) throws IOException, ServletException {
-    OAuthFailureEntryPoint.commence(request, response, failure);
+    getOAuthFailureEntryPoint().commence(request, response, failure);
   }
 
   /**

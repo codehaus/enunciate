@@ -227,8 +227,10 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       String realm = details.getAuthorizationHeaderRealm();
 
       StringBuilder builder = new StringBuilder("OAuth ");
+      boolean writeComma = false;
       if (realm != null) { //realm is optional.
-        builder.append("realm=\"").append(realm).append("\", ");
+        builder.append("realm=\"").append(realm).append('"');
+        writeComma = true;
       }
 
       OAuthConsumerParameter[] parameters = OAuthConsumerParameter.values();
@@ -236,11 +238,13 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
         OAuthConsumerParameter parameter = parameters[i];
         String paramValue = oauthParams.get(parameter.toString());
         if (paramValue != null) { //token is optional.
-          builder.append(parameter.toString()).append("=\"").append(paramValue).append('"');
-        }
+          if (writeComma) {
+            writeComma = false;
+            builder.append(", ");
+          }
 
-        if (i + 1 < parameters.length) {
-          builder.append(", ");
+          builder.append(parameter.toString()).append("=\"").append(paramValue).append('"');
+          writeComma = true;
         }
       }
 
@@ -253,7 +257,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     Map<String, String> oauthParams = loadOAuthParameters(details, url, accessToken);
 
     StringBuilder queryString = new StringBuilder();
-    if (!details.isAcceptsAuthorizationHeader()) {
+    if (details.isAcceptsAuthorizationHeader()) {
       //if the resource accepts the authorization header, the oauth parameters will go in a header and not in the query.
       for (OAuthConsumerParameter oauthParam : OAuthConsumerParameter.values()) {
         oauthParams.remove(oauthParam.toString());
@@ -309,7 +313,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
         len = inputStream.read(buffer);
       }
 
-      tokenInfo = new String(buffer, "UTF-8");
+      tokenInfo = new String(out.toByteArray(), "UTF-8");
     }
     catch (IOException e) {
       throw new OAuthRequestFailedException("Unable to read the token.", e);
@@ -362,9 +366,6 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     String httpMethod = details.getHTTPMethod();
     if ((httpMethod == null) || (httpMethod.length() == 0)) {
       httpMethod = "POST";
-    }
-    else {
-      httpMethod = httpMethod.toUpperCase();
     }
 
     Map<String, String> oauthParams = new TreeMap<String, String>();
@@ -489,12 +490,12 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     }
 
     StringBuilder url = new StringBuilder(requestURL.getProtocol().toLowerCase()).append("://").append(requestURL.getHost().toLowerCase());
-    if (requestURL.getPort() != requestURL.getDefaultPort()) {
+    if ((requestURL.getPort() >= 0) && (requestURL.getPort() != requestURL.getDefaultPort())) {
       url.append(":").append(requestURL.getPort());
     }
     url.append(requestURL.getPath());
 
-    return new StringBuilder(httpMethod).append('&').append(url).append('&').append(oauthEncode(queryString.toString())).toString();
+    return new StringBuilder(httpMethod.toUpperCase()).append('&').append(oauthEncode(url.toString())).append('&').append(oauthEncode(queryString.toString())).toString();
   }
 
   /**
