@@ -24,12 +24,12 @@ public class AccessTokenProcessingFilter extends UnauthenticatedRequestTokenProc
   }
 
   @Override
-  protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws BadCredentialsException {
+  protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws InvalidOAuthParametersException {
     super.validateOAuthParams(consumerDetails, oauthParams);
 
     String token = oauthParams.get(OAuthConsumerParameter.oauth_token.toString());
     if (token == null) {
-      throw new BadCredentialsException(messages.getMessage("AccessTokenProcessingFilter.missingToken", "Missing token."));
+      throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.missingToken", "Missing token."));
     }
   }
 

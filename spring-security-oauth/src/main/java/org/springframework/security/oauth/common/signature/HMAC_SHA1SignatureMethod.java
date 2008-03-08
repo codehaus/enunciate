@@ -2,6 +2,8 @@ package org.springframework.security.oauth.common.signature;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import static org.springframework.security.oauth.common.OAuthCodec.oauthDecode;
 import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
 
@@ -18,6 +20,8 @@ import java.util.Arrays;
  * @author Ryan Heaton
  */
 public class HMAC_SHA1SignatureMethod implements OAuthSignatureMethod {
+
+  private static final Log LOG = LogFactory.getLog(HMAC_SHA1SignatureMethod.class);
 
   /**
    * The name of this HMAC-SHA1 signature method ("HMAC-SHA1").
@@ -63,8 +67,14 @@ public class HMAC_SHA1SignatureMethod implements OAuthSignatureMethod {
       byte[] text = signatureBaseString.getBytes("UTF-8");
       byte[] signatureBytes = mac.doFinal(text);
       signatureBytes = Base64.encodeBase64(signatureBytes);
-      String signature = new String(signatureBytes, "UTF-8");
-      return oauthEncode(signature);
+      String signature = oauthEncode(new String(signatureBytes, "UTF-8"));
+
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("signature base: " + signatureBaseString);
+        LOG.debug("signature: " + signature);
+      }
+
+      return signature;
     }
     catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException(e);
@@ -88,6 +98,11 @@ public class HMAC_SHA1SignatureMethod implements OAuthSignatureMethod {
    */
   public void verify(String signatureBaseString, String signature) throws InvalidSignatureException {
     try {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("signature base: " + signatureBaseString);
+        LOG.debug("signature: " + signature);
+      }
+
       signature = oauthDecode(signature);
       byte[] signatureBytes = Base64.decodeBase64(signature.getBytes("UTF-8"));
 

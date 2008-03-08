@@ -1,13 +1,13 @@
 package org.springframework.security.oauth.common.signature;
 
-import org.acegisecurity.AuthenticationException;
+import org.springframework.security.oauth.common.OAuthException;
 
 /**
  * Thrown when a signature is invalid.
  *
  * @author Ryan Heaton
  */
-public class InvalidSignatureException extends AuthenticationException {
+public class InvalidSignatureException extends OAuthException {
 
   public InvalidSignatureException(String msg) {
     super(msg);

@@ -1,9 +1,8 @@
 package org.springframework.security.oauth.provider;
 
 import org.acegisecurity.AcegiMessageSource;
-import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.BadCredentialsException;
 import org.acegisecurity.Authentication;
+import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,7 +34,7 @@ import java.util.Map;
  */
 public abstract class OAuthProviderProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
 
-  private static final Log LOG = LogFactory.getLog(UnauthenticatedRequestTokenProcessingFilter.class);
+  private static final Log LOG = LogFactory.getLog(OAuthProviderProcessingFilter.class);
   private final List<String> allowedMethods = new ArrayList<String>(Arrays.asList("GET", "POST"));
   private OAuthProcessingFilterEntryPoint authenticationEntryPoint = new OAuthProcessingFilterEntryPoint();
   protected MessageSourceAccessor messages = AcegiMessageSource.getAccessor();
@@ -75,7 +74,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
         if (!oauthParams.isEmpty()) {
           String consumerKey = oauthParams.get(OAuthConsumerParameter.oauth_consumer_key.toString());
           if (consumerKey == null) {
-            throw new BadCredentialsException(messages.getMessage("OAuthProcessingFilter.missingConsumerKey", "Missing consumer key."));
+            throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingConsumerKey", "Missing consumer key."));
           }
 
           //load the consumer details.
@@ -95,21 +94,24 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
           ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, credentials);
           authentication.setDetails(createDetails(request, consumerDetails));
 
-          //set the authentication request (unauthenticated) into the context.
           Authentication previousAuthentication = SecurityContextHolder.getContext().getAuthentication();
-          SecurityContextHolder.getContext().setAuthentication(authentication);
+          try {
+            //set the authentication request (unauthenticated) into the context.
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-          //validate the signature.
-          validateSignature(authentication);
+            //validate the signature.
+            validateSignature(authentication);
 
-          //mark the authentication request as validated.
-          authentication.setSignatureValidated(true);
+            //mark the authentication request as validated.
+            authentication.setSignatureValidated(true);
 
-          //go.
-          onValidSignature(request, response, chain);
-
-          //clear out the consumer authentication to make sure it doesn't get cached.
-          resetPreviousAuthentication(previousAuthentication);
+            //go.
+            onValidSignature(request, response, chain);
+          }
+          finally {
+            //clear out the consumer authentication to make sure it doesn't get cached.
+            resetPreviousAuthentication(previousAuthentication);
+          }
         }
         else if (!isIgnoreMissingCredentials()) {
           throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingCredentials", "Missing OAuth consumer credentials."));
@@ -120,6 +122,14 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
       }
       catch (AuthenticationException ae) {
         fail(request, response, ae);
+      }
+      catch (ServletException e) {
+        if (e.getRootCause() instanceof AuthenticationException) {
+          fail(request, response, (AuthenticationException) e.getRootCause());
+        }
+        else {
+          throw e;
+        }
       }
     }
     else {
@@ -166,7 +176,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
     }
 
     String signatureMethod = authentication.getConsumerCredentials().getSignatureMethod();
-    OAuthSignatureMethod method = getSignatureMethodFactory().getSignatureMethod(signatureMethod, secret, authToken.getSecret());
+    OAuthSignatureMethod method = getSignatureMethodFactory().getSignatureMethod(signatureMethod, secret, authToken != null ? authToken.getSecret() : null);
 
     String signatureBaseString = authentication.getConsumerCredentials().getSignatureBaseString();
     String signature = authentication.getConsumerCredentials().getSignature();
@@ -191,10 +201,9 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param consumerDetails The consumer details.
    * @param oauthParams     The OAuth parameters to validate.
-   * @throws org.acegisecurity.BadCredentialsException
-   *          If the OAuth parameters are invalid.
+   * @throws InvalidOAuthParametersException If the OAuth parameters are invalid.
    */
-  protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws BadCredentialsException {
+  protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws InvalidOAuthParametersException {
     String version = oauthParams.get(OAuthConsumerParameter.oauth_version.toString());
     if ((version != null) && (!"1.0".equals(version))) {
       throw new OAuthVersionUnsupportedException("Unsupported OAuth version: " + version);

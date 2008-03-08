@@ -6,6 +6,7 @@ import org.springframework.security.oauth.consumer.nonce.UUIDNonceFactory;
 import org.springframework.security.oauth.consumer.net.OAuthURLStreamHandlerFactory;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
+import org.springframework.security.oauth.common.OAuthCodec;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
 import org.springframework.security.oauth.common.signature.CoreOAuthSignatureMethodFactory;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
@@ -13,6 +14,7 @@ import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 import org.acegisecurity.util.StringSplitUtils;
+import org.apache.commons.codec.DecoderException;
 
 import java.net.*;
 import java.util.*;
@@ -94,8 +96,8 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * Read a resource.
    *
    * @param details The details.
-   * @param url The URL.
-   * @param token The token to use for access.
+   * @param url     The URL.
+   * @param token   The token to use for access.
    * @return The resource.
    */
   protected InputStream readResouce(ProtectedResourceDetails details, URL url, OAuthConsumerToken token) {
@@ -171,7 +173,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * header isn't supported, then the OAuth parameters will be expected to be sent in the body of the request. Otherwise,
    * you can assume that the given URL is ready to be used without further work.
    *
-   * @param url The base URL.
+   * @param url         The base URL.
    * @param accessToken The access token.
    * @return The configured URL.
    */
@@ -182,9 +184,9 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
   /**
    * Internal use of configuring the URL for protected access, the resource details already having been loaded.
    *
-   * @param url The URL.
+   * @param url          The URL.
    * @param requestToken The request token.
-   * @param details The details.
+   * @param details      The details.
    * @return The configured URL.
    */
   protected URL configureURLForProtectedAccess(URL url, OAuthConsumerToken requestToken, ProtectedResourceDetails details) {
@@ -243,7 +245,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
             builder.append(", ");
           }
 
-          builder.append(parameter.toString()).append("=\"").append(paramValue).append('"');
+          builder.append(oauthEncode(parameter.toString())).append("=\"").append(oauthEncode(paramValue)).append('"');
           writeComma = true;
         }
       }
@@ -322,15 +324,21 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     StringTokenizer tokenProperties = new StringTokenizer(tokenInfo, "&");
     Map<String, String> tokenPropertyValues = new TreeMap<String, String>();
     while (tokenProperties.hasMoreElements()) {
-      String tokenProperty = (String) tokenProperties.nextElement();
-      int equalsIndex = tokenProperty.indexOf('=');
-      if (equalsIndex > 0) {
-        String propertyName = tokenProperty.substring(0, equalsIndex);
-        String propertyValue = tokenProperty.substring(equalsIndex + 1);
-        tokenPropertyValues.put(propertyName, propertyValue);
+      try {
+        String tokenProperty = (String) tokenProperties.nextElement();
+        int equalsIndex = tokenProperty.indexOf('=');
+        if (equalsIndex > 0) {
+          String propertyName = OAuthCodec.oauthDecode(tokenProperty.substring(0, equalsIndex));
+          String propertyValue = OAuthCodec.oauthDecode(tokenProperty.substring(equalsIndex + 1));
+          tokenPropertyValues.put(propertyName, propertyValue);
+        }
+        else {
+          tokenProperty = OAuthCodec.oauthDecode(tokenProperty);
+          tokenPropertyValues.put(tokenProperty, null);
+        }
       }
-      else {
-        tokenPropertyValues.put(tokenProperty, null);
+      catch (DecoderException e) {
+        throw new OAuthRequestFailedException("Unable to decode token parameters.");
       }
     }
 

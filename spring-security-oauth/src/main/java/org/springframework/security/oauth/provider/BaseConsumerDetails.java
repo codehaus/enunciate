@@ -12,7 +12,7 @@ public class BaseConsumerDetails implements ConsumerDetails {
 
   private String consumerKey;
   private SignatureSecret signatureSecret;
-  private GrantedAuthority[] authorities;
+  private GrantedAuthority[] authorities = new GrantedAuthority[0];
 
   /**
    * The consumer key.

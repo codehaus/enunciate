@@ -2,12 +2,11 @@ package org.springframework.security.oauth.provider;
 
 import org.acegisecurity.Authentication;
 import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.BadCredentialsException;
+import org.acegisecurity.InsufficientAuthenticationException;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.ui.AbstractProcessingFilter;
-import org.springframework.util.Assert;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
-import org.springframework.security.oauth.common.UserNotAuthenticatedException;
+import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,13 +17,13 @@ import java.io.IOException;
  *
  * @author Ryan Heaton
  */
-public class OAuthUserAuthorizationProcessingFilter extends AbstractProcessingFilter {
+public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter {
 
   private OAuthProviderTokenServices tokenServices;
   private String tokenIdParameterName = "oauth_token";
   private String callbackParameterName = "oauth_callback";
 
-  public OAuthUserAuthorizationProcessingFilter() {
+  public UserAuthorizationProcessingFilter() {
     setDefaultTargetUrl("/");
   }
 
@@ -32,20 +31,20 @@ public class OAuthUserAuthorizationProcessingFilter extends AbstractProcessingFi
   public void afterPropertiesSet() throws Exception {
     Assert.hasLength(getAuthenticationFailureUrl(), "authenticationFailureUrl must be provided.");
     Assert.notNull(getRememberMeServices());
-    Assert.notNull(getTokenServices(), "A consumer details service must be provided.");
+    Assert.notNull(getTokenServices(), "A token services must be provided.");
   }
 
   @Override
   protected void onPreAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException {
     if (request.getParameter(getTokenParameterName()) == null) {
-      throw new BadCredentialsException("An OAuth token id is required.");
+      throw new InvalidOAuthParametersException("An OAuth token id is required.");
     }
   }
 
   public Authentication attemptAuthentication(HttpServletRequest request) throws AuthenticationException {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (!authentication.isAuthenticated()) {
-      throw new UserNotAuthenticatedException("User must be authenticated before authorizing a request token.");
+      throw new InsufficientAuthenticationException("User must be authenticated before authorizing a request token.");
     }
     getTokenServices().authorizeRequestToken(request.getParameter(getTokenParameterName()), authentication);
     return authentication;

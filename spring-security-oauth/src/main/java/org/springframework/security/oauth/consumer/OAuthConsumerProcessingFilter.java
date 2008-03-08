@@ -12,16 +12,18 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
 import org.springframework.context.support.MessageSourceAccessor;
-import org.springframework.security.oauth.common.UserNotAuthenticatedException;
+import org.springframework.security.oauth.common.OAuthException;
 import org.springframework.security.oauth.common.signature.CoreOAuthSignatureMethodFactory;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
+import org.springframework.security.oauth.consumer.token.HttpSessionBasedTokenServicesFactory;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServices;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServicesFactory;
-import org.springframework.security.oauth.consumer.token.HttpSessionBasedTokenServicesFactory;
 import org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceServices;
 import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
 import org.springframework.util.Assert;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -39,11 +41,13 @@ import java.util.*;
 public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
 
   public static final String ACCESS_TOKENS_DEFAULT_ATTRIBUTE = "OAUTH_ACCESS_TOKENS";
+  public static final String OAUTH_FAILURE_KEY = "OAUTH_FAILURE_KEY";
+  private static final Log LOG = LogFactory.getLog(OAuthConsumerProcessingFilter.class);
 
   private AuthenticationEntryPoint OAuthFailureEntryPoint;
   protected MessageSourceAccessor messages = AcegiMessageSource.getAccessor();
   private FilterInvocationDefinitionSource objectDefinitionSource;
-  private OAuthConsumerSupport consumerSupport = new CoreOAuthConsumerSupport();
+  private OAuthConsumerSupport consumerSupport;
   private OAuthSignatureMethodFactory signatureMethodFactory = new CoreOAuthSignatureMethodFactory();
   private OAuthNonceServices nonceServices = new ExpiringTimestampNonceServices();
   private boolean requireAuthenticated = true;
@@ -54,9 +58,10 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
   private ProtectedResourceDetailsService protectedResourceDetailsService;
 
   public void afterPropertiesSet() throws Exception {
-    Assert.notNull(OAuthFailureEntryPoint, "An entry point must be configured to handle the case of OAuth failure.");
+    Assert.notNull(consumerSupport, "Consumer support must be provided.");
     Assert.notNull(tokenServicesFactory, "OAuth token services factory is required.");
     Assert.notNull(protectedResourceDetailsService, "A protected resource details service is required.");
+    Assert.notNull(objectDefinitionSource, "The object definition source must be configured.");
   }
 
   public void init(FilterConfig ignored) throws ServletException {
@@ -74,7 +79,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
       try {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (requireAuthenticated && !authentication.isAuthenticated()) {
-          throw new UserNotAuthenticatedException("Must be authenticated.");
+          throw new InsufficientAuthenticationException("An authenticated principal must be present.");
         }
 
         OAuthConsumerTokenServices tokenServices = getTokenServicesFactory().getTokenServices(authentication, request);
@@ -105,8 +110,16 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
         request.setAttribute(getAccessTokensRequestAttribute(), tokens);
         chain.doFilter(request, response);
       }
-      catch (AuthenticationException ae) {
+      catch (OAuthException ae) {
         fail(request, response, ae);
+      }
+      catch (ServletException e) {
+        if (e.getRootCause() instanceof OAuthException) {
+          fail(request, response, (OAuthException) e.getRootCause());
+        }
+        else {
+          throw e;
+        }
       }
     }
     else {
@@ -147,14 +160,32 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
   }
 
   /**
-   * Common logic for OAuth failed.
+   * Common logic for OAuth failed. (Note that the default logic doesn't pass the failure through so as to not mess
+   * with the current authentication.)
    *
    * @param request  The request.
    * @param response The response.
    * @param failure  The failure.
    */
-  protected void fail(HttpServletRequest request, HttpServletResponse response, AuthenticationException failure) throws IOException, ServletException {
-    getOAuthFailureEntryPoint().commence(request, response, failure);
+  protected void fail(HttpServletRequest request, HttpServletResponse response, OAuthException failure) throws IOException, ServletException {
+    try {
+      //attempt to set the last exception.
+      request.getSession().setAttribute(OAUTH_FAILURE_KEY, failure);
+    }
+    catch (Exception e) {
+      //fall through....
+    }
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(failure);
+    }
+    
+    if (getOAuthFailureEntryPoint() != null) {
+      getOAuthFailureEntryPoint().commence(request, response, failure);
+    }
+    else {
+      throw new RuntimeException("Unexpected OAuth problem.", failure);
+    }
   }
 
   /**
@@ -172,8 +203,8 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
     if (getObjectDefinitionSource() != null) {
       FilterInvocation invocation = new FilterInvocation(request, response, filterChain);
       ConfigAttributeDefinition attributeDefinition = getObjectDefinitionSource().getAttributes(invocation);
-      Iterator attributes = attributeDefinition.getConfigAttributes();
-      if (attributes != null) {
+      if (attributeDefinition != null) {
+        Iterator attributes = attributeDefinition.getConfigAttributes();
         while (attributes.hasNext()) {
           ConfigAttribute attribute = (ConfigAttribute) attributes.next();
           deps.add(attribute.getAttribute());

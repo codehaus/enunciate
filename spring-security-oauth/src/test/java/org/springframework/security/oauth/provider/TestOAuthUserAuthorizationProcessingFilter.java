@@ -2,10 +2,10 @@ package org.springframework.security.oauth.provider;
 
 import junit.framework.TestCase;
 import org.acegisecurity.Authentication;
+import org.acegisecurity.InsufficientAuthenticationException;
 import org.acegisecurity.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
-import org.springframework.security.oauth.common.UserNotAuthenticatedException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -18,7 +18,7 @@ public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
    * tests the attempt to authenticate.
    */
   public void testAttemptAuthentication() throws Exception {
-    OAuthUserAuthorizationProcessingFilter filter = new OAuthUserAuthorizationProcessingFilter();
+    UserAuthorizationProcessingFilter filter = new UserAuthorizationProcessingFilter();
     HttpServletRequest request = createMock(HttpServletRequest.class);
     Authentication authentication = createMock(Authentication.class);
     OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
@@ -30,7 +30,7 @@ public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
       filter.attemptAuthentication(request);
       fail();
     }
-    catch (UserNotAuthenticatedException e) {
+    catch (InsufficientAuthenticationException e) {
       verify(authentication, request, tokenServices);
       reset(authentication, request, tokenServices);
     }
@@ -51,7 +51,7 @@ public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
    * test determineTargetUrl
    */
   public void testDetermineTargetUrl() throws Exception {
-    OAuthUserAuthorizationProcessingFilter filter = new OAuthUserAuthorizationProcessingFilter();
+    UserAuthorizationProcessingFilter filter = new UserAuthorizationProcessingFilter();
     HttpServletRequest request = createMock(HttpServletRequest.class);
 
     expect(request.getParameter("oauth_callback")).andReturn("http://my.host.com/my/context");

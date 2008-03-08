@@ -19,6 +19,11 @@ import java.io.IOException;
  */
 public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderProcessingFilter {
 
+  // The OAuth spec doesn't specify a content-type of the response.  However, it's NOT
+  // "application/x-www-form-urlencoded" because the response isn't URL-encoded. Until
+  // something is specified, we'll assume that it's just "text/plain".
+  private String responseContentType = "text/plain;charset=utf-8";
+
   public UnauthenticatedRequestTokenProcessingFilter() {
     setFilterProcessesUrl("/oauth_request_token");
   }
@@ -31,14 +36,14 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
       throw new IllegalStateException("The consumer key associated with the created auth token is not valid for the authenticated consumer.");
     }
 
-    String tokenName = OAuthCodec.oauthEncode(OAuthProviderParameter.oauth_token.toString());
-    String tokenValue = OAuthCodec.oauthEncode(authToken.getValue());
-    String secretName = OAuthCodec.oauthEncode(OAuthProviderParameter.oauth_token_secret.toString());
-    String secretValue = OAuthCodec.oauthEncode(authToken.getSecret());
-    StringBuilder responseValue = new StringBuilder(tokenName).append('=').append(tokenValue);
-    responseValue.append('&');
-    responseValue.append(secretName).append('=').append(secretValue);
-    response.setContentType("application/x-www-form-urlencoded");
+    StringBuilder responseValue = new StringBuilder(OAuthProviderParameter.oauth_token.toString())
+      .append('=')
+      .append(OAuthCodec.oauthEncode(authToken.getValue()))
+      .append('&')
+      .append(OAuthProviderParameter.oauth_token_secret.toString())
+      .append('=')
+      .append(OAuthCodec.oauthEncode(authToken.getSecret()));
+    response.setContentType(getResponseContentType());
     response.getWriter().print(responseValue.toString());
     response.flushBuffer();
   }
@@ -58,4 +63,21 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
     return getTokenServices().createUnauthorizedRequestToken(authentication.getConsumerDetails().getConsumerKey());
   }
 
+  /**
+   * The content type of the response.
+   *
+   * @return The content type of the response.
+   */
+  public String getResponseContentType() {
+    return responseContentType;
+  }
+
+  /**
+   * The content type of the response.
+   *
+   * @param responseContentType The content type of the response.
+   */
+  public void setResponseContentType(String responseContentType) {
+    this.responseContentType = responseContentType;
+  }
 }

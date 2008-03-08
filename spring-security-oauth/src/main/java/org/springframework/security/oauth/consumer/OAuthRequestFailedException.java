@@ -1,13 +1,13 @@
 package org.springframework.security.oauth.consumer;
 
-import org.acegisecurity.AuthenticationException;
+import org.springframework.security.oauth.common.OAuthException;
 
 /**
  * Thrown when an OAuth request fails.
  *
  * @author Ryan Heaton
  */
-public class OAuthRequestFailedException extends AuthenticationException {
+public class OAuthRequestFailedException extends OAuthException {
 
   public OAuthRequestFailedException(String msg) {
     super(msg);

@@ -1,9 +1,10 @@
 package org.springframework.security.oauth.provider;
 
 import org.acegisecurity.util.StringSplitUtils;
+import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
+import static org.springframework.security.oauth.common.OAuthCodec.oauthDecode;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
-import static org.springframework.security.oauth.common.OAuthCodec.*;
-import org.springframework.security.oauth.consumer.ProtectedResourceDetailsService;
+import org.apache.commons.codec.DecoderException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -17,13 +18,11 @@ import java.util.*;
  */
 public class CoreOAuthProviderSupport implements OAuthProviderSupport {
 
-  private ProtectedResourceDetailsService protectedResourceDetailsService;
-
   private final Set<String> supportedOAuthParameters;
   private String baseUrl = null;
 
   public CoreOAuthProviderSupport() {
-    Set<String> supportedOAuthParameters = new HashSet<String>();
+    Set<String> supportedOAuthParameters = new TreeSet<String>();
     for (OAuthConsumerParameter supportedParameter : OAuthConsumerParameter.values()) {
       supportedOAuthParameters.add(supportedParameter.toString());
     }
@@ -43,24 +42,28 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
       Iterator headerEntriesIt = StringSplitUtils.splitEachArrayElementAndCreateMap(headerEntries, "=", "\"").entrySet().iterator();
       while (headerEntriesIt.hasNext()) {
         Map.Entry entry = (Map.Entry) headerEntriesIt.next();
-        String key = (String) entry.getKey();
-        String value = (String) entry.getValue();
+        String key;
+        String value;
         try {
-          //attempt to URL decode the key-value pairs.
-          key = URLDecoder.decode(key, "utf-8");
-          value = URLDecoder.decode(value, "utf-8");
+          key = oauthDecode((String) entry.getKey());
+          value = oauthDecode((String) entry.getValue());
         }
-        catch (UnsupportedEncodingException e) {
-          //fall through...
+        catch (DecoderException e) {
+          throw new IllegalStateException(e);
         }
 
-        parameters.put(key, value);
+        if ((getSupportedOAuthParameters().contains(key)) || ("realm".equals(key))) {
+          parameters.put(key, value);
+        }
       }
     }
     else {
       Set<String> supportedOAuthParameters = getSupportedOAuthParameters();
       for (String supportedOAuthParameter : supportedOAuthParameters) {
-        parameters.put(supportedOAuthParameter, request.getParameter(supportedOAuthParameter));
+        String param = request.getParameter(supportedOAuthParameter);
+        if (param != null) {
+          parameters.put(supportedOAuthParameter, param);
+        }
       }
     }
 

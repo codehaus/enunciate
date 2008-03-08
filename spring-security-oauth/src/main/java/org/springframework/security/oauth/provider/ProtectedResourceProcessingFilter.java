@@ -1,6 +1,5 @@
 package org.springframework.security.oauth.provider;
 
-import org.acegisecurity.BadCredentialsException;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
@@ -27,6 +26,12 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
 
   private boolean allowAllMethods = true;
 
+  public ProtectedResourceProcessingFilter() {
+    //we're going to ignore missing credentials by default.  This is to allow a chance for the resource to
+    //be accessed by some other means of authentication.
+    setIgnoreMissingCredentials(true);
+  }
+
   @Override
   protected boolean allowMethod(String method) {
     return allowAllMethods || super.allowMethod(method);
@@ -46,12 +51,12 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
   }
 
   @Override
-  protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws BadCredentialsException {
+  protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws InvalidOAuthParametersException {
     super.validateOAuthParams(consumerDetails, oauthParams);
 
     String token = oauthParams.get(OAuthConsumerParameter.oauth_token.toString());
     if (token == null) {
-      throw new BadCredentialsException(messages.getMessage("ProtectedResourceProcessingFilter.missingToken", "Missing auth token."));
+      throw new InvalidOAuthParametersException(messages.getMessage("ProtectedResourceProcessingFilter.missingToken", "Missing auth token."));
     }
   }
 

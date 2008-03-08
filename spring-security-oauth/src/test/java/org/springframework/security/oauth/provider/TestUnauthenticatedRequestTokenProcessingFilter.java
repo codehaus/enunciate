@@ -43,7 +43,7 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
     expect(authToken.getValue()).andReturn("tokvalue");
     expect(authToken.getSecret()).andReturn("shhhhhh");
     expect(consumerDetails.getConsumerKey()).andReturn("chi");
-    response.setContentType("application/x-www-form-urlencoded");
+    response.setContentType("text/plain;charset=utf-8");
     StringWriter writer = new StringWriter();
     expect(response.getWriter()).andReturn(new PrintWriter(writer));
     response.flushBuffer();

@@ -1,7 +1,6 @@
 package org.springframework.security.oauth.provider;
 
-import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.BadCredentialsException;
+import org.springframework.security.oauth.common.OAuthException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,10 +14,10 @@ public class InMemoryConsumerDetailsService implements ConsumerDetailsService {
 
   private Map<String, ConsumerDetails> consumerDetailsStore = new HashMap<String, ConsumerDetails>();
 
-  public ConsumerDetails loadConsumerByConsumerKey(String consumerKey) throws AuthenticationException {
+  public ConsumerDetails loadConsumerByConsumerKey(String consumerKey) throws OAuthException {
     ConsumerDetails details = consumerDetailsStore.get(consumerKey);
     if (details == null) {
-      throw new BadCredentialsException("Consumer not found: " + consumerKey);
+      throw new InvalidOAuthParametersException("Consumer not found: " + consumerKey);
     }
     return details;
   }

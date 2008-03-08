@@ -1,25 +1,24 @@
 package org.springframework.security.oauth.consumer;
 
-import static org.easymock.EasyMock.*;
-import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServicesFactory;
-import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServices;
-import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
-import org.springframework.security.oauth.common.UserNotAuthenticatedException;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.context.SecurityContextHolder;
-
 import junit.framework.TestCase;
+import org.acegisecurity.Authentication;
+import org.acegisecurity.InsufficientAuthenticationException;
+import org.acegisecurity.context.SecurityContextHolder;
+import static org.easymock.EasyMock.*;
+import org.springframework.security.oauth.common.OAuthException;
+import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
+import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServices;
+import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServicesFactory;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.io.IOException;
 
 /**
  * @author Ryan Heaton
@@ -71,7 +70,7 @@ public class TestOAuthConsumerProcessingFilter extends TestCase {
       }
 
       @Override
-      protected void fail(HttpServletRequest request, HttpServletResponse response, AuthenticationException failure) throws IOException, ServletException {
+      protected void fail(HttpServletRequest request, HttpServletResponse response, OAuthException failure) throws IOException, ServletException {
         throw failure;
       }
     };
@@ -107,7 +106,7 @@ public class TestOAuthConsumerProcessingFilter extends TestCase {
       filter.doFilter(request, response, filterChain);
       fail("should have required authentication");
     }
-    catch (UserNotAuthenticatedException e) {
+    catch (InsufficientAuthenticationException e) {
       verify(request, response, filterChain, tokenServices, support, authentication);
       reset(request, response, filterChain, tokenServices, support, authentication);
     }

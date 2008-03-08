@@ -47,7 +47,7 @@ public class TestOAuthProcessingFilter extends TestCase {
       }
 
       @Override
-      protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws BadCredentialsException {
+      protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws InvalidOAuthParametersException {
         triggers[0] = true;
       }
 
@@ -106,7 +106,7 @@ public class TestOAuthProcessingFilter extends TestCase {
       filter.doFilter(request, response, filterChain);
       fail("should have required a consumer key.");
     }
-    catch (BadCredentialsException e) {
+    catch (InvalidOAuthParametersException e) {
       verify(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices);
       reset(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices);
       assertFalse(triggers[0]);
@@ -297,7 +297,8 @@ public class TestOAuthProcessingFilter extends TestCase {
     filter.setTokenServices(tokenServices);
     expect(tokenServices.getToken("token")).andReturn(token);
     filter.setSignatureMethodFactory(sigFactory);
-    expect(sigFactory.getSignatureMethod("method", secret, token.getSecret())).andReturn(sigMethod);
+    expect(token.getSecret()).andReturn("shhh!!!");
+    expect(sigFactory.getSignatureMethod("method", secret, "shhh!!!")).andReturn(sigMethod);
     sigMethod.verify("base", "sig");
 
     replay(details, secret, tokenServices, token,  sigFactory, sigMethod);

@@ -1,6 +1,6 @@
 package org.springframework.security.oauth.provider;
 
-import org.acegisecurity.AuthenticationException;
+import org.springframework.security.oauth.common.OAuthException;
 
 /**
  * A service that provides the details about an oauth consumer.
@@ -14,8 +14,8 @@ public interface ConsumerDetailsService {
    *
    * @param consumerKey The consumer key.
    * @return The consumer details.
-   * @throws AuthenticationException If the consumer account is locked, expired, disabled, or for any other reason.
+   * @throws OAuthException If the consumer account is locked, expired, disabled, or for any other reason.
    */
-  ConsumerDetails loadConsumerByConsumerKey(String consumerKey) throws AuthenticationException;
+  ConsumerDetails loadConsumerByConsumerKey(String consumerKey) throws OAuthException;
 
 }
