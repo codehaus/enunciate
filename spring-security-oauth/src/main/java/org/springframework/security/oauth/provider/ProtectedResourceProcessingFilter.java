@@ -1,6 +1,7 @@
 package org.springframework.security.oauth.provider;
 
 import org.acegisecurity.Authentication;
+import org.acegisecurity.providers.AbstractAuthenticationToken;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
@@ -45,6 +46,10 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
     }
     else {
       Authentication userAuthentication = ((OAuthAccessProviderToken) authToken).getUserAuthentication();
+      if (userAuthentication instanceof AbstractAuthenticationToken) {
+        //initialize the details with the consumer that is actually making the request on behalf of the user.
+        ((AbstractAuthenticationToken) userAuthentication).setDetails(new OAuthAuthenticationDetails(request, authentication.getConsumerDetails()));
+      }
       SecurityContextHolder.getContext().setAuthentication(userAuthentication);
     }
     chain.doFilter(request, response);

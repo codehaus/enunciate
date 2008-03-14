@@ -20,6 +20,13 @@ public interface ConsumerDetails extends Serializable {
   String getConsumerKey();
 
   /**
+   * The name of the consumer (for display purposes).
+   *
+   * @return The name of the consumer (for display purposes).
+   */
+  String getConsumerName();
+
+  /**
    * The signature secret.
    *
    * @return The signature secret.
