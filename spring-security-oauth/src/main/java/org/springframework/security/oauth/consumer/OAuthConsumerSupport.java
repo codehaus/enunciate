@@ -1,9 +1,9 @@
 package org.springframework.security.oauth.consumer;
 
-import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
-
-import java.net.URL;
 import java.io.InputStream;
+import java.net.URL;
+
+import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
 
 /**
  * Consumer-side support for OAuth.
@@ -13,12 +13,20 @@ import java.io.InputStream;
 public interface OAuthConsumerSupport {
 
   /**
-   * Get an unauthorized request token for a protected resource.
+   * Get an unauthorized request token for a {@link ProtectedResourceDetails}
    *
-   * @param resourceId The id of the protected resource for which to get a consumer token.
+   * @param resourceId The id of the {@link ProtectedResourceDetails} for which to get a consumer token.
    * @return The unauthorized request token.
    */
   OAuthConsumerToken getUnauthorizedRequestToken(String resourceId) throws OAuthRequestFailedException;
+  
+  /**
+   * Get an unauthorized request token for a {@link ProtectedResourceDetails}
+   *
+   * @param resourceId The {@link ProtectedResourceDetails} for which to get a consumer token.
+   * @return The unauthorized request token.
+   */
+  OAuthConsumerToken getUnauthorizedRequestToken(ProtectedResourceDetails provider) throws OAuthRequestFailedException;
 
   /**
    * Get an access token for a protected resource.
