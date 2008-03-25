@@ -79,28 +79,28 @@ public class ConfigMojo extends AbstractMojo {
   /**
    * The output directory for the "generate" step.
    *
-   * @parameter expression="${project.build.directory}/enunciate-generate"
+   * @parameter expression="${project.build.directory}/enunciate/generate"
    */
   private File generateDir = null;
 
   /**
    * The output directory for the "compile" step.
    *
-   * @parameter
+   * @parameter expression="${project.build.directory}/enunciate/compile"
    */
   private File compileDir = null;
 
   /**
    * The output directory for the "build" step.
    *
-   * @parameter
+   * @parameter expression="${project.build.directory}/enunciate/build"
    */
   private File buildDir = null;
 
   /**
    * The output directory for the "package" step.
    *
-   * @parameter
+   * @parameter expression="${project.build.directory}/enunciate/package"
    */
   private File packageDir = null;
 
@@ -190,7 +190,13 @@ public class ConfigMojo extends AbstractMojo {
     Set<File> sourceDirs = new HashSet<File>();
     Collection<String> sourcePaths = (Collection<String>) project.getCompileSourceRoots();
     for (String sourcePath : sourcePaths) {
-      sourceDirs.add(new File(sourcePath));
+      File sourceDir = new File(sourcePath);
+      if (isEnunciateGenerated(sourceDir)) {
+        sourceDirs.add(sourceDir);
+      }
+      else {
+        getLog().info(sourceDir + " appears to be enunciate-generated.  Excluding from original source roots....");
+      }
     }
 
     MavenSpecificEnunciate enunciate = loadMavenSpecificEnunciate(sourceDirs);
@@ -299,6 +305,36 @@ public class ConfigMojo extends AbstractMojo {
   }
 
   /**
+   * Whether the given source directory is Enunciate-generated.
+   *
+   * @param sourceDir The source directory.
+   * @return Whether the given source directory is Enunciate-generated.Whether the given source directory is Enunciate-generated.
+   */
+  protected boolean isEnunciateGenerated(File sourceDir) {
+    return !new File(sourceDir, ".enunciate-generated").exists();
+  }
+
+  /**
+   * Adds the specified source directory to the Maven project.
+   *
+   * @param dir The directory to add to the project.
+   */
+  protected void addSourceDirToProject(File dir) {
+    String sourceDir = dir.getAbsolutePath();
+    if (!project.getCompileSourceRoots().contains(sourceDir)) {
+      getLog().info("Adding '" + sourceDir + "' to the compile source roots.");
+      project.addCompileSourceRoot(sourceDir);
+      try {
+        dir.mkdirs();
+        new File(dir, ".enunciate-generated").createNewFile();
+      }
+      catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  /**
    * Create an Enunciate configuration.
    *
    * @return The enunciate configuration.
@@ -367,9 +403,6 @@ public class ConfigMojo extends AbstractMojo {
           if (module instanceof SpringAppDeploymentModule) {
             onInitSpringAppDeploymentModule((SpringAppDeploymentModule) module);
           }
-          else if (module instanceof GWTDeploymentModule) {
-            onInitGWTDeploymentModule((GWTDeploymentModule) module);
-          }
           else if (module instanceof AMFDeploymentModule) {
             onInitAMFDeploymentModule((AMFDeploymentModule) module);
           }
@@ -377,40 +410,46 @@ public class ConfigMojo extends AbstractMojo {
       }
     }
 
-    protected void onInitAMFDeploymentModule(AMFDeploymentModule amfModule) {
-      if (addActionscriptSources) {
-        String clientSidePath = amfModule.getClientSideGenerateDir().getPath();
-        getLog().info("Adding '" + clientSidePath + "' to the compile source roots.");
-        project.addCompileSourceRoot(clientSidePath);
-        String serverSidePath = amfModule.getServerSideGenerateDir().getPath();
-        getLog().info("Adding '" + serverSidePath + "' to the compile source roots.");
-        project.addCompileSourceRoot(serverSidePath);
-        for (FlexApp flexApp : amfModule.getFlexApps()) {
-          File srcDir = resolvePath(flexApp.getSrcDir());
-          String path = srcDir.getPath();
-          getLog().info("Adding '" + path + "' to the compile source roots.");
-          project.addCompileSourceRoot(path);
+    @Override
+    protected void doGenerate(List<DeploymentModule> modules) throws IOException, EnunciateException {
+      super.doGenerate(modules);
+
+      for (DeploymentModule module : modules) {
+        if (!module.isDisabled()) {
+          if (module instanceof GWTDeploymentModule) {
+            afterGWTGenerate((GWTDeploymentModule) module);
+          }
+          else if (module instanceof AMFDeploymentModule) {
+            afterAMFGenerate((AMFDeploymentModule) module);
+          }
         }
       }
+    }
 
+    protected void onInitAMFDeploymentModule(AMFDeploymentModule amfModule) {
       if (amfModule.getCompilerConfig().getContextRoot() == null) {
         amfModule.getCompilerConfig().setContextRoot("/" + project.getArtifactId());
       }
     }
 
-    protected void onInitGWTDeploymentModule(GWTDeploymentModule gwtModule) {
+    protected void afterAMFGenerate(AMFDeploymentModule amfModule) {
+      if (addActionscriptSources) {
+        addSourceDirToProject(amfModule.getClientSideGenerateDir());
+        addSourceDirToProject(amfModule.getServerSideGenerateDir());
+        for (FlexApp flexApp : amfModule.getFlexApps()) {
+          File srcDir = resolvePath(flexApp.getSrcDir());
+          addSourceDirToProject(srcDir);
+        }
+      }
+    }
+
+    protected void afterGWTGenerate(GWTDeploymentModule gwtModule) {
       if (addGWTSources) {
-        String clientSidePath = gwtModule.getClientSideGenerateDir().getPath();
-        getLog().info("Adding '" + clientSidePath + "' to the compile source roots.");
-        project.addCompileSourceRoot(clientSidePath);
-        String serverSidePath = gwtModule.getServerSideGenerateDir().getPath();
-        getLog().info("Adding '" + serverSidePath + "' to the compile source roots.");
-        project.addCompileSourceRoot(serverSidePath);
+        addSourceDirToProject(gwtModule.getClientSideGenerateDir());
+        addSourceDirToProject(gwtModule.getServerSideGenerateDir());
         for (GWTApp gwtApp : gwtModule.getGwtApps()) {
           File srcDir = resolvePath(gwtApp.getSrcDir());
-          String path = srcDir.getPath();
-          getLog().info("Adding '" + path + "' to the compile source roots.");
-          project.addCompileSourceRoot(path);
+          addSourceDirToProject(srcDir);
         }
       }
     }

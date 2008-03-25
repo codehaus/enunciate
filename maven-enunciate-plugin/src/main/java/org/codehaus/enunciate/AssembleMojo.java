@@ -1,14 +1,13 @@
 package org.codehaus.enunciate;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule;
 import org.codehaus.enunciate.main.Enunciate;
+import org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
 import java.util.Collection;
-import java.util.Properties;
+import java.util.Set;
 
 /**
  * Assembles the whole Enunciate app without compilation or packaging of the war.
@@ -64,27 +63,27 @@ public class AssembleMojo extends ConfigMojo {
     //now we have to include the server-side sources into the compile source roots.
     File jaxwsSources = (File) this.enunciate.getProperty("jaxws.src.dir");
     if (jaxwsSources != null) {
-      project.addCompileSourceRoot(jaxwsSources.getAbsolutePath());
+      addSourceDirToProject(jaxwsSources);
     }
 
     File xfireServerSources = (File) this.enunciate.getProperty("xfire-server.src.dir");
     if (xfireServerSources != null) {
-      project.addCompileSourceRoot(xfireServerSources.getAbsolutePath());
+      addSourceDirToProject(xfireServerSources);
     }
 
     File gwtServerSources = (File) this.enunciate.getProperty("gwt.server.src.dir");
     if (gwtServerSources != null) {
-      project.addCompileSourceRoot(gwtServerSources.getAbsolutePath());
+      addSourceDirToProject(gwtServerSources);
     }
 
     File gwtClientSources = (File) this.enunciate.getProperty("gwt.client.src.dir");
     if (gwtClientSources != null) {
-      project.addCompileSourceRoot(gwtClientSources.getAbsolutePath());
+      addSourceDirToProject(gwtClientSources);
     }
 
     File amfServerSources = (File) this.enunciate.getProperty("amf.server.src.dir");
     if (amfServerSources != null) {
-      project.addCompileSourceRoot(amfServerSources.getAbsolutePath());
+      addSourceDirToProject(amfServerSources);
     }
   }
 
