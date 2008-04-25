@@ -20,9 +20,11 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.model.Resource;
 import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.main.Enunciate;
 import org.codehaus.enunciate.modules.DeploymentModule;
+import org.codehaus.enunciate.modules.xfire_client.XFireClientDeploymentModule;
 import org.codehaus.enunciate.modules.amf.AMFDeploymentModule;
 import org.codehaus.enunciate.modules.amf.config.FlexApp;
 import org.codehaus.enunciate.modules.gwt.GWTDeploymentModule;
@@ -125,6 +127,13 @@ public class ConfigMojo extends AbstractMojo {
    * @parameter
    */
   private boolean addActionscriptSources = true;
+
+  /**
+   * Whether to add the actionscript sources to the project test sources.
+   *
+   * @parameter
+   */
+  private boolean addXFireClientSourcesToTestClasspath = false;
 
   /**
    * The GWT home.
@@ -422,6 +431,9 @@ public class ConfigMojo extends AbstractMojo {
           else if (module instanceof AMFDeploymentModule) {
             afterAMFGenerate((AMFDeploymentModule) module);
           }
+          else if (module instanceof XFireClientDeploymentModule) {
+            afterXFireClientGenerate((XFireClientDeploymentModule) module);
+          }
         }
       }
     }
@@ -438,7 +450,7 @@ public class ConfigMojo extends AbstractMojo {
         addSourceDirToProject(amfModule.getServerSideGenerateDir());
         for (FlexApp flexApp : amfModule.getFlexApps()) {
           File srcDir = resolvePath(flexApp.getSrcDir());
-          addSourceDirToProject(srcDir);
+          project.addCompileSourceRoot(srcDir.getAbsolutePath());
         }
       }
     }
@@ -449,8 +461,19 @@ public class ConfigMojo extends AbstractMojo {
         addSourceDirToProject(gwtModule.getServerSideGenerateDir());
         for (GWTApp gwtApp : gwtModule.getGwtApps()) {
           File srcDir = resolvePath(gwtApp.getSrcDir());
-          addSourceDirToProject(srcDir);
+          project.addCompileSourceRoot(srcDir.getAbsolutePath());
         }
+      }
+    }
+
+    protected void afterXFireClientGenerate(XFireClientDeploymentModule clientModule) {
+      if (addXFireClientSourcesToTestClasspath) {
+        project.addTestCompileSourceRoot(clientModule.getCommonJdkGenerateDir().getAbsolutePath());
+        project.addTestCompileSourceRoot(clientModule.getJdk15GenerateDir().getAbsolutePath());
+        Resource xfireClientResources = new Resource();
+        //include any properties, types, annotations files
+        xfireClientResources.setDirectory(clientModule.getCommonJdkGenerateDir().getAbsolutePath());
+        project.addTestResource(xfireClientResources);
       }
     }
 
