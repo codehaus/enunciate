@@ -24,6 +24,7 @@ import org.apache.maven.model.Resource;
 import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.main.Enunciate;
 import org.codehaus.enunciate.modules.DeploymentModule;
+import org.codehaus.enunciate.modules.rest.RESTDeploymentModule;
 import org.codehaus.enunciate.modules.xfire_client.XFireClientDeploymentModule;
 import org.codehaus.enunciate.modules.amf.AMFDeploymentModule;
 import org.codehaus.enunciate.modules.amf.config.FlexApp;
@@ -258,7 +259,8 @@ public class ConfigMojo extends AbstractMojo {
         //remove just the test-scope artifacts from the classpath.
         it.remove();
       }
-      else if ((warConfig != null) && ((org.apache.maven.artifact.Artifact.SCOPE_PROVIDED.equals(artifactScope)) || (org.apache.maven.artifact.Artifact.SCOPE_SYSTEM.equals(artifactScope)))) {
+      else
+      if ((warConfig != null) && ((org.apache.maven.artifact.Artifact.SCOPE_PROVIDED.equals(artifactScope)) || (org.apache.maven.artifact.Artifact.SCOPE_SYSTEM.equals(artifactScope)))) {
         IncludeExcludeLibs excludeLibs = new IncludeExcludeLibs();
         excludeLibs.setFile(artifact.getFile());
         warConfig.addExcludeLibs(excludeLibs);
@@ -434,6 +436,9 @@ public class ConfigMojo extends AbstractMojo {
           else if (module instanceof XFireClientDeploymentModule) {
             afterXFireClientGenerate((XFireClientDeploymentModule) module);
           }
+          else if (module instanceof RESTDeploymentModule) {
+            afterRESTGenerate((RESTDeploymentModule) module);
+          }
         }
       }
     }
@@ -474,6 +479,15 @@ public class ConfigMojo extends AbstractMojo {
         //include any properties, types, annotations files
         xfireClientResources.setDirectory(clientModule.getCommonJdkGenerateDir().getAbsolutePath());
         project.addTestResource(xfireClientResources);
+      }
+    }
+
+    protected void afterRESTGenerate(RESTDeploymentModule clientModule) {
+      if (getProperty("rest.parameter.names") != null) {
+        Resource restResource = new Resource();
+        //include any properties, types, annotations files
+        restResource.setDirectory(((File) getProperty("rest.parameter.names")).getParentFile().getAbsolutePath());
+        project.addResource(restResource);
       }
     }
 
