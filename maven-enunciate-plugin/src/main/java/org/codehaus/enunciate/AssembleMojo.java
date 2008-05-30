@@ -60,30 +60,9 @@ public class AssembleMojo extends ConfigMojo {
       throw new MojoExecutionException("Problem assembling the enunciate app.", e);
     }
 
-    //now we have to include the server-side sources into the compile source roots.
-    File jaxwsSources = (File) this.enunciate.getProperty("jaxws.src.dir");
-    if (jaxwsSources != null) {
-      addSourceDirToProject(jaxwsSources);
-    }
-
-    File xfireServerSources = (File) this.enunciate.getProperty("xfire-server.src.dir");
-    if (xfireServerSources != null) {
-      addSourceDirToProject(xfireServerSources);
-    }
-
-    File gwtServerSources = (File) this.enunciate.getProperty("gwt.server.src.dir");
-    if (gwtServerSources != null) {
-      addSourceDirToProject(gwtServerSources);
-    }
-
-    File gwtClientSources = (File) this.enunciate.getProperty("gwt.client.src.dir");
-    if (gwtClientSources != null) {
-      addSourceDirToProject(gwtClientSources);
-    }
-
-    File amfServerSources = (File) this.enunciate.getProperty("amf.server.src.dir");
-    if (amfServerSources != null) {
-      addSourceDirToProject(amfServerSources);
+    //now we have to include the generated sources into the compile source roots.
+    for (File additionalRoot : this.enunciate.getAdditionalSourceRoots()) {
+      addSourceDirToProject(additionalRoot);
     }
   }
 

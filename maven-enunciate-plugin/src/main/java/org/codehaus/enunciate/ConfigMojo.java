@@ -151,6 +151,13 @@ public class ConfigMojo extends AbstractMojo {
   private String flexHome = null;
 
   /**
+   * Whether to compile with debug information.
+   *
+   * @parameter
+   */
+  private boolean compileDebug = true;
+
+  /**
    * The exports.
    *
    * @parameter
@@ -304,6 +311,8 @@ public class ConfigMojo extends AbstractMojo {
         enunciate.addExport(exportId, exportFile);
       }
     }
+
+    enunciate.setCompileDebugInfo(this.compileDebug);
 
     try {
       enunciate.loadMavenConfiguration();
@@ -486,7 +495,7 @@ public class ConfigMojo extends AbstractMojo {
       if (getProperty("rest.parameter.names") != null) {
         Resource restResource = new Resource();
         //include any properties, types, annotations files
-        restResource.setDirectory(((File) getProperty("rest.parameter.names")).getParentFile().getAbsolutePath());
+        restResource.setDirectory(clientModule.getGenerateDir().getAbsolutePath());
         project.addResource(restResource);
       }
     }
