@@ -203,16 +203,21 @@ public class ConfigMojo extends AbstractMojo {
    */
   private MavenProjectHelper projectHelper;
 
+  /**
+   * List of source directories that are enunciate-added.
+   */
+  private static final TreeSet<String> ENUNCIATE_ADDED = new TreeSet<String>();
+
   public void execute() throws MojoExecutionException {
     Set<File> sourceDirs = new HashSet<File>();
     Collection<String> sourcePaths = (Collection<String>) project.getCompileSourceRoots();
     for (String sourcePath : sourcePaths) {
       File sourceDir = new File(sourcePath);
-      if (isEnunciateGenerated(sourceDir)) {
+      if (!isEnunciateAdded(sourceDir)) {
         sourceDirs.add(sourceDir);
       }
       else {
-        getLog().info(sourceDir + " appears to be enunciate-generated.  Excluding from original source roots....");
+        getLog().info(sourceDir + " appears to be added to the source roots by Enunciate.  Excluding from original source roots....");
       }
     }
 
@@ -330,8 +335,8 @@ public class ConfigMojo extends AbstractMojo {
    * @param sourceDir The source directory.
    * @return Whether the given source directory is Enunciate-generated.Whether the given source directory is Enunciate-generated.
    */
-  protected boolean isEnunciateGenerated(File sourceDir) {
-    return !new File(sourceDir, ".enunciate-generated").exists();
+  protected boolean isEnunciateAdded(File sourceDir) {
+    return ENUNCIATE_ADDED.contains(sourceDir.getAbsolutePath());
   }
 
   /**
@@ -341,16 +346,10 @@ public class ConfigMojo extends AbstractMojo {
    */
   protected void addSourceDirToProject(File dir) {
     String sourceDir = dir.getAbsolutePath();
+    ENUNCIATE_ADDED.add(sourceDir);
     if (!project.getCompileSourceRoots().contains(sourceDir)) {
       getLog().info("Adding '" + sourceDir + "' to the compile source roots.");
       project.addCompileSourceRoot(sourceDir);
-      try {
-        dir.mkdirs();
-        new File(dir, ".enunciate-generated").createNewFile();
-      }
-      catch (IOException e) {
-        throw new RuntimeException(e);
-      }
     }
   }
 
@@ -464,7 +463,7 @@ public class ConfigMojo extends AbstractMojo {
         addSourceDirToProject(amfModule.getServerSideGenerateDir());
         for (FlexApp flexApp : amfModule.getFlexApps()) {
           File srcDir = resolvePath(flexApp.getSrcDir());
-          project.addCompileSourceRoot(srcDir.getAbsolutePath());
+          addSourceDirToProject(srcDir);
         }
       }
     }
@@ -475,7 +474,7 @@ public class ConfigMojo extends AbstractMojo {
         addSourceDirToProject(gwtModule.getServerSideGenerateDir());
         for (GWTApp gwtApp : gwtModule.getGwtApps()) {
           File srcDir = resolvePath(gwtApp.getSrcDir());
-          project.addCompileSourceRoot(srcDir.getAbsolutePath());
+          addSourceDirToProject(srcDir);
         }
       }
     }
