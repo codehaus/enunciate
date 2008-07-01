@@ -5,8 +5,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.enunciate.main.Enunciate;
 
-import java.util.Properties;
-
 /**
  * Goal which performs the "generate" step of an Enunciate build process.
  *
