@@ -25,7 +25,6 @@ import com.sun.mirror.type.ClassType;
 import com.sun.mirror.type.DeclaredType;
 import com.sun.mirror.type.MirroredTypeException;
 import com.sun.mirror.type.TypeMirror;
-import com.sun.mirror.util.Types;
 import net.sf.jelly.apt.Context;
 import org.codehaus.enunciate.contract.jaxb.Accessor;
 import static org.codehaus.enunciate.contract.jaxb.util.JAXBUtil.unwrapComponentType;
