@@ -18,8 +18,8 @@
     <module>rest</module>
     <module>xfire-rt</module>
     <module>xfire</module>
-<!--
     <module>xfire-client</module>
+<!--
     <module>docs</module>
     <module>amf</module>
     <module>gwt</module>
