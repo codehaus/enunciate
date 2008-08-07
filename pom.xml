@@ -12,8 +12,9 @@
     <module>core</module>
     <module>xml</module>
     <module>jaxws</module>
-<!--
+    <module>rest-rt</module>
     <module>rest</module>
+<!--
     <module>xfire-client</module>
     <module>docs</module>
     <module>amf</module>
