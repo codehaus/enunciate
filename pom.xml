@@ -12,6 +12,8 @@
     <module>core</module>
     <module>xml</module>
     <module>jaxws</module>
+    <module>spring-app-rt</module>
+    <module>spring-app</module>
     <module>rest-rt</module>
     <module>rest</module>
 <!--
@@ -20,7 +22,6 @@
     <module>amf</module>
     <module>gwt</module>
     <module>xfire</module>
-    <module>spring-app</module>
     <module>test-integration</module>
     <module>xfire-integration</module>
 -->
