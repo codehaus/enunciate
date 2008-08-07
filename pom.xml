@@ -16,12 +16,13 @@
     <module>spring-app</module>
     <module>rest-rt</module>
     <module>rest</module>
+    <module>xfire-rt</module>
+    <module>xfire</module>
 <!--
     <module>xfire-client</module>
     <module>docs</module>
     <module>amf</module>
     <module>gwt</module>
-    <module>xfire</module>
     <module>test-integration</module>
     <module>xfire-integration</module>
 -->
