@@ -22,8 +22,9 @@
     <module>docs</module>
     <module>amf-rt</module>
     <module>amf</module>
-<!--
+    <module>gwt-rt</module>
     <module>gwt</module>
+<!--
     <module>test-integration</module>
     <module>xfire-integration</module>
 -->
