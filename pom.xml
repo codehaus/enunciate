@@ -25,7 +25,8 @@
     <module>amf</module>
     <module>gwt-rt</module>
     <module>gwt</module>
-    <module>full-rt</module>
+    <module>top-rt</module>
+    <module>top</module>
     <module>full</module>
     <module>maven-enunciate-plugin</module>
     <module>integration-test-support</module>
@@ -44,12 +45,77 @@
         </configuration>
       </plugin>
       <plugin>
+        <!-- each Enunciate module needs to generate its own module documentation.
+        This artifact is the template used for it. -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.codehaus.enunciate</groupId>
+                  <artifactId>enunciate-build-support</artifactId>
+                  <version>1.0</version>
+                  <type>fmt</type>
+                  <classifier>module-template</classifier>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${project.build.directory}/build-support</outputDirectory>
+                  <destFileName>enunciate-build-support-module-template.fmt</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!--this will generate the module docs when packaging -->
+        <groupId>org.apache.myfaces.tobago</groupId>
+        <artifactId>maven-apt-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <configuration>
+              <force>true</force>
+              <generated>target/module-docs</generated>
+              <factory>net.sf.jelly.apt.freemarker.FreemarkerProcessorFactory</factory>
+              <aptOptions>template=${project.build.directory}/build-support/enunciate-build-support-module-template.fmt</aptOptions>
+              <nocompile>true</nocompile>
+              <showWarnings>true</showWarnings>
+              <excludes>
+                <exclude>**/package-info*</exclude>
+              </excludes>
+            </configuration>
+            <goals>
+              <goal>execute</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-idea-plugin</artifactId>
         <version>2.1</version>
         <configuration>
           <downloadSources>true</downloadSources>
           <downloadJavadocs>true</downloadJavadocs>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
