@@ -31,6 +31,7 @@ import java.util.List;
  *
  * @author Ryan Heaton
  */
+@org.codehaus.enunciate.XmlTransient
 public class SourceServiceAdvice extends DelegatingIntroductionInterceptor implements MethodInterceptor, HandlerSupport {
 
   public Object invoke(MethodInvocation methodInvocation) throws Throwable {

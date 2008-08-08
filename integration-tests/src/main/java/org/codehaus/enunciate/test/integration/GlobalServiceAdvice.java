@@ -22,6 +22,7 @@ import org.aopalliance.intercept.MethodInvocation;
 /**
  * @author Ryan Heaton
  */
+@org.codehaus.enunciate.XmlTransient
 public class GlobalServiceAdvice implements MethodInterceptor {
 
   public Object invoke(MethodInvocation methodInvocation) throws Throwable {

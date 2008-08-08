@@ -922,7 +922,7 @@ public class Enunciate {
     }
 
     if (destFiles.isEmpty()) {
-      debug("%s is NOT up-to-date because it's an empty directory.");
+      debug("%s is NOT up-to-date because it's an empty directory.", destFile);
       return false;
     }
     else {
