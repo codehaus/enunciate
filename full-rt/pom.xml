@@ -8,7 +8,6 @@
   </parent>
 
   <artifactId>enunciate-rt</artifactId>
-  <packaging>pom</packaging>
   <name>Enunciate - Full Runtime</name>
   <description>The Enunciate full runtime is simply a reference to all known Enunciate runtime libraries.</description>
 

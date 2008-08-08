@@ -8,7 +8,7 @@
     <version>1.8-SNAPSHOT</version>
   </parent>
 
-  <artifactId>enunciate-amf-tools</artifactId>
+  <artifactId>enunciate-amf-rt</artifactId>
   <name>Enunciate - AMF Runtime</name>
   <description>The Enunciate AMF Runtime libraries support the AMF endpoints on the server.</description>
 

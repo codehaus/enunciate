@@ -18,6 +18,7 @@
     <module>rest</module>
     <module>xfire-rt</module>
     <module>xfire</module>
+    <module>xfire-client-rt</module>
     <module>xfire-client</module>
     <module>docs</module>
     <module>amf-rt</module>
@@ -26,6 +27,7 @@
     <module>gwt</module>
     <module>full-rt</module>
     <module>full</module>
+    <module>maven-enunciate-plugin</module>
     <module>integration-test-support</module>
 <!--
     <module>xfire-integration</module>
