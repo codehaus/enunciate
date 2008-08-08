@@ -24,6 +24,8 @@
     <module>amf</module>
     <module>gwt-rt</module>
     <module>gwt</module>
+    <module>full-rt</module>
+    <module>full</module>
     <module>integration-test-support</module>
 <!--
     <module>xfire-integration</module>
