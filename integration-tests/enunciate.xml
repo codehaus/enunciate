@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<!-- Enunciate configuration for the integration tests. -->
 <enunciate label="full">
   <namespaces>
     <namespace id="data" uri="http://enunciate.codehaus.org/samples/genealogy/data"/>
@@ -17,7 +18,7 @@
       </package-conversions>
     </xfire-client>
     <spring-app uuid="full.example">
-      <springImport file="../custom_spring.xml"/>
+      <springImport file="custom_spring.xml"/>
       <copyResources dir="../../../../src/samples/full" pattern="**/*.txt"/>
       <globalServiceInterceptor beanName="globalServiceAdvice"/>
       <war>
@@ -27,7 +28,7 @@
       </war>
     </spring-app>
     <docs splashPackage="org.codehaus.enunciate.samples.genealogy" title="MRCGS API" copyright="My Really Cool Genealogy Site">
-      <download name="License" file="../dummy-license.txt" description="The license file governing these downloads."/>
+      <download name="License" file="dummy-license.txt" description="The license file governing these downloads."/>
     </docs>
     <gwt disabled="false" gwtModuleName="org.codehaus.enunciate.samples.genealogy.Genealogy"/>
   </modules>
