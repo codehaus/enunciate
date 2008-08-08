@@ -20,8 +20,9 @@
     <module>xfire</module>
     <module>xfire-client</module>
     <module>docs</module>
-<!--
+    <module>amf-rt</module>
     <module>amf</module>
+<!--
     <module>gwt</module>
     <module>test-integration</module>
     <module>xfire-integration</module>
