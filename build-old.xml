@@ -168,8 +168,8 @@
 
   </target>
 
-  <target name="copy-module-docs" depends="build, copy-module-docs-only" description="copies over the module documentation to the right place."/>
-  <target name="copy-module-docs-only" depends="init" description="copies over the module documentation to the right place, assuming its already there.">
+  <target name="module-docs" depends="build, module-docs-only" description="copies over the module documentation to the right place."/>
+  <target name="module-docs-only" depends="init" description="copies over the module documentation to the right place, assuming its already there.">
     <mkdir dir="${module.docs.dir}"/>
     <copy todir="${module.docs.dir}" failonerror="false" overwrite="true">
       <fileset dir="modules">
@@ -188,7 +188,7 @@
     </copy>
   </target>
 
-  <target name="doc" description="generate documentation and javadoc (global)" depends="copy-static-docs, javadoc, getting-started-examples, copy-module-docs"/>
+  <target name="doc" description="generate documentation and javadoc (global)" depends="copy-static-docs, javadoc, getting-started-examples, module-docs"/>
 
   <target name="copy-getting-started-source">
     <taskdef name="java2html" classname="de.java2html.anttasks.Java2HtmlTask">
