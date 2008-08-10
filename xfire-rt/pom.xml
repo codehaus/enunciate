@@ -21,125 +21,31 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
-      <version>2.3</version>
-
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-webmvc</artifactId>
-      <version>${spring.version}</version>
     </dependency>
 
     <dependency>
       <groupId>jdom</groupId>
       <artifactId>jdom</artifactId>
-      <version>1.0</version>
     </dependency>
 
     <dependency>
       <groupId>javax.mail</groupId>
       <artifactId>mail</artifactId>
-      <version>1.4</version>
-      <exclusions>
-        <!--We'll depend on enunciate's version of activation. Not Mail's.-->
-        <exclusion>
-          <groupId>javax.activation</groupId>
-          <artifactId>activation</artifactId>
-        </exclusion>        
-      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>woodstox</groupId>
       <artifactId>wstx-asl</artifactId>
-      <version>2.9.3</version>
     </dependency>
 
     <dependency>
       <groupId>org.codehaus.xfire</groupId>
       <artifactId>xfire-all</artifactId>
-      <version>1.2.2</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-aegis</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-plexus</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-ws-security</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-picocontainer</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-xmpp</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-jaxb2</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-jms</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-java5</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-generator</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-xmlbeans</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-castor</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-annotations</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-jaxb</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-jaxws</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-loom</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-spring</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.xfire</groupId>
-          <artifactId>xfire-jibx</artifactId>
-        </exclusion>
-        <exclusion>
-          <!--We'll depend on enunciate's version of activation. Not XFire's.-->
-          <groupId>javax.activation</groupId>
-          <artifactId>activation</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
   </dependencies>
@@ -154,28 +60,14 @@
         <dependency>
           <groupId>com.sun.xml.bind</groupId>
           <artifactId>jaxb-impl</artifactId>
-          <version>2.0</version>
-          <exclusions>
-            <exclusion>
-              <groupId>javax.xml.bind</groupId>
-              <artifactId>jsr173_api</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>javax.xml</groupId>
-              <artifactId>jsr173</artifactId>
-            </exclusion>
-            <exclusion>
-              <!--We'll depend on enunciate's version of activation. Not JAXB's.-->
-              <groupId>javax.activation</groupId>
-              <artifactId>activation</artifactId>
-            </exclusion>
-          </exclusions>
         </dependency>
-
+        <dependency>
+          <groupId>javax.activation</groupId>
+          <artifactId>activation</artifactId>
+        </dependency>
         <dependency>
           <groupId>stax</groupId>
           <artifactId>stax-api</artifactId>
-          <version>1.0.1</version>
         </dependency>
       </dependencies>
     </profile>

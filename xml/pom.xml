@@ -52,30 +52,28 @@
     <dependency>
       <groupId>com.sun.xsom</groupId>
       <artifactId>xsom</artifactId>
-      <version>20070323</version>
+
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>wsdl4j</groupId>
       <artifactId>wsdl4j</artifactId>
-      <version>1.5.2</version>
+
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>relaxngDatatype</groupId>
       <artifactId>relaxngDatatype</artifactId>
-      <version>20020414</version>
+
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
-      <version>1.4</version>
 
-      <!--for testing the xmladapters only-->
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -128,7 +128,6 @@
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
-      <version>1.4</version>
 
       <!--for testing the xmladapters only-->
       <scope>test</scope>
@@ -146,22 +145,10 @@
         <dependency>
           <groupId>com.sun.xml.bind</groupId>
           <artifactId>jaxb-impl</artifactId>
-          <version>2.0</version>
-          <exclusions>
-            <exclusion>
-              <groupId>javax.xml.bind</groupId>
-              <artifactId>jsr173_api</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>javax.xml</groupId>
-              <artifactId>jsr173</artifactId>
-            </exclusion>
-            <exclusion>
-              <!--We'll depend on enunciate's version of activation. Not JAXB's.-->
-              <groupId>javax.activation</groupId>
-              <artifactId>activation</artifactId>
-            </exclusion>
-          </exclusions>
+        </dependency>
+        <dependency>
+          <groupId>javax.activation</groupId>
+          <artifactId>activation</artifactId>
         </dependency>
       </dependencies>
     </profile>
