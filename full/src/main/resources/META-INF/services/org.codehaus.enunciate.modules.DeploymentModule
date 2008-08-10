@@ -1,9 +1,0 @@
-org.codehaus.enunciate.modules.amf.AMFDeploymentModule
-org.codehaus.enunciate.modules.xfire_client.XFireClientDeploymentModule
-org.codehaus.enunciate.modules.jaxws.JAXWSDeploymentModule
-org.codehaus.enunciate.modules.xfire.XFireDeploymentModule
-org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule
-org.codehaus.enunciate.modules.xml.XMLDeploymentModule
-org.codehaus.enunciate.modules.gwt.GWTDeploymentModule
-org.codehaus.enunciate.modules.rest.RESTDeploymentModule
-org.codehaus.enunciate.modules.docs.DocumentationDeploymentModule

@@ -17,6 +17,7 @@
 package org.codehaus.enunciate.modules.xfire_client;
 
 import junit.framework.TestCase;
+import junit.framework.Assert;
 import org.codehaus.xfire.service.ServiceInfo;
 import org.codehaus.xfire.service.OperationInfo;
 import org.codehaus.xfire.service.Service;
@@ -256,11 +257,11 @@ public class TestEnunciatedClientOperationBinding extends TestCase {
 
     binding.writeMessage(outMessage, new JDOMStreamWriter(new Element("message", "urn:testWriteMessage")), context);
     assertNotNull(holder.value);
-    assertEquals(10, holder.value.getAnd());
-    assertEquals(new Float(9), holder.value.getBack());
-    assertEquals(new Double(8), holder.value.getIn());
-    assertEquals(false, holder.value.isOf());
-    assertEquals("dummy", holder.value.getOrder());
-    assertEquals(7, holder.value.getOut());
+    Assert.assertEquals(10, holder.value.getAnd());
+    Assert.assertEquals(new Float(9), holder.value.getBack());
+    Assert.assertEquals(new Double(8), holder.value.getIn());
+    Assert.assertEquals(false, holder.value.isOf());
+    Assert.assertEquals("dummy", holder.value.getOrder());
+    Assert.assertEquals(7, holder.value.getOut());
   }
 }
