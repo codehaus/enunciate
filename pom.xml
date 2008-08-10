@@ -572,4 +572,20 @@
 
   </dependencyManagement>
 
+  <distributionManagement>
+
+    <repository>
+      <id>codehaus.org</id>
+      <name>XFire Central Repository</name>
+      <url>dav:https://dav.codehaus.org/repository/enunciate/</url>
+    </repository>
+
+    <snapshotRepository>
+      <id>codehaus.org</id>
+      <name>XFire Central Development Repository</name>
+      <url>dav:https://dav.codehaus.org/snapshots.repository/enunciate/</url>
+    </snapshotRepository>
+
+  </distributionManagement>
+
 </project>

@@ -54,10 +54,6 @@
       <name>XFire Central Development Repository</name>
       <url>dav:https://dav.codehaus.org/snapshots.repository/enunciate/</url>
     </snapshotRepository>
-    <site>
-      <id>codehaus.org</id>
-      <url>dav:https://dav.codehaus.org/enunciate/</url>
-    </site>
   </distributionManagement>
 
   <dependencies>
