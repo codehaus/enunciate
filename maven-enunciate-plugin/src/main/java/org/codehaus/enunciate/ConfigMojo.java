@@ -16,23 +16,23 @@ package org.codehaus.enunciate;
  * limitations under the License.
  */
 
+import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.maven.model.Resource;
 import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.main.Enunciate;
 import org.codehaus.enunciate.modules.DeploymentModule;
-import org.codehaus.enunciate.modules.rest.RESTDeploymentModule;
-import org.codehaus.enunciate.modules.xfire_client.XFireClientDeploymentModule;
 import org.codehaus.enunciate.modules.amf.AMFDeploymentModule;
 import org.codehaus.enunciate.modules.amf.config.FlexApp;
 import org.codehaus.enunciate.modules.gwt.GWTDeploymentModule;
 import org.codehaus.enunciate.modules.gwt.config.GWTApp;
+import org.codehaus.enunciate.modules.rest.RESTDeploymentModule;
 import org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule;
 import org.codehaus.enunciate.modules.spring_app.config.IncludeExcludeLibs;
 import org.codehaus.enunciate.modules.spring_app.config.WarConfig;
+import org.codehaus.enunciate.modules.xfire_client.XFireClientDeploymentModule;
 
 import java.io.File;
 import java.io.IOException;
@@ -388,8 +388,7 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     public void loadMavenConfiguration() throws IOException {
-      List<DeploymentModule> modules = getConfig().getEnabledModules();
-      for (DeploymentModule module : modules) {
+      for (DeploymentModule module : getConfig().getAllModules()) {
         if (!module.isDisabled()) {
           if (module instanceof GWTDeploymentModule) {
             configureGWTDeploymentModule((GWTDeploymentModule) module);
@@ -414,7 +413,7 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     @Override
-    protected void initModules(List<DeploymentModule> modules) throws EnunciateException, IOException {
+    protected void initModules(Collection<DeploymentModule> modules) throws EnunciateException, IOException {
       super.initModules(modules);
 
       for (DeploymentModule module : modules) {
@@ -430,10 +429,10 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     @Override
-    protected void doGenerate(List<DeploymentModule> modules) throws IOException, EnunciateException {
-      super.doGenerate(modules);
+    protected void doGenerate() throws IOException, EnunciateException {
+      super.doGenerate();
 
-      for (DeploymentModule module : modules) {
+      for (DeploymentModule module : getConfig().getAllModules()) {
         if (!module.isDisabled()) {
           if (module instanceof GWTDeploymentModule) {
             afterGWTGenerate((GWTDeploymentModule) module);
@@ -537,8 +536,8 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     @Override
-    protected void doClose(List<DeploymentModule> list) throws EnunciateException, IOException {
-      super.doClose(list);
+    protected void doClose() throws EnunciateException, IOException {
+      super.doClose();
 
       if (warArtifactId != null) {
         org.codehaus.enunciate.main.Artifact warArtifact = null;
