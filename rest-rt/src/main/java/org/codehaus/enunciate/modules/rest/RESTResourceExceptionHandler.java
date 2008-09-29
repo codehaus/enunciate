@@ -64,7 +64,7 @@ public class RESTResourceExceptionHandler implements HandlerExceptionResolver, V
         statusCode = errorInfo.errorCode();
       }
 
-      String message = exception.getMessage();
+      String message = getMessage(exception);
       if ((message == null) && (statusCode == 404)) {
         message = request.getRequestURI();
       }
@@ -115,4 +115,13 @@ public class RESTResourceExceptionHandler implements HandlerExceptionResolver, V
       response.sendError(statusCode);
     }
   }
+
+    /**
+     * Allows you to override the message so you can localize things
+     * @param exception you want to localize
+     * @return a message to display to the user
+     */
+	protected String getMessage(Exception exception) {
+		return exception.getMessage();
+	}
 }
