@@ -16,23 +16,27 @@ package org.codehaus.enunciate;
  * limitations under the License.
  */
 
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.maven.model.Resource;
+import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.codehaus.enunciate.config.EnunciateConfiguration;
 import org.codehaus.enunciate.main.Enunciate;
 import org.codehaus.enunciate.modules.DeploymentModule;
-import org.codehaus.enunciate.modules.rest.RESTDeploymentModule;
-import org.codehaus.enunciate.modules.xfire_client.XFireClientDeploymentModule;
 import org.codehaus.enunciate.modules.amf.AMFDeploymentModule;
 import org.codehaus.enunciate.modules.amf.config.FlexApp;
 import org.codehaus.enunciate.modules.gwt.GWTDeploymentModule;
 import org.codehaus.enunciate.modules.gwt.config.GWTApp;
+import org.codehaus.enunciate.modules.rest.RESTDeploymentModule;
 import org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule;
 import org.codehaus.enunciate.modules.spring_app.config.IncludeExcludeLibs;
 import org.codehaus.enunciate.modules.spring_app.config.WarConfig;
+import org.codehaus.enunciate.modules.xfire_client.XFireClientDeploymentModule;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
@@ -204,6 +208,20 @@ public class ConfigMojo extends AbstractMojo {
   private MavenProjectHelper projectHelper;
 
   /**
+   * @parameter expression="${session}"
+   * @readonly
+   */
+  private MavenSession session;
+
+  /**
+   * Maven file filter.
+   *
+   * @component role="org.apache.maven.shared.filtering.MavenFileFilter" role-hint="default"
+   * @readonly
+   */
+  private MavenFileFilter configFilter;
+
+  /**
    * List of source directories that are enunciate-added.
    */
   private static final TreeSet<String> ENUNCIATE_ADDED = new TreeSet<String>();
@@ -226,7 +244,7 @@ public class ConfigMojo extends AbstractMojo {
     config.setLabel(project.getArtifactId());
     if (this.configFile != null) {
       try {
-        config.load(this.configFile);
+        loadConfig(config, this.configFile);
       }
       catch (Exception e) {
         throw new MojoExecutionException("Problem with enunciate config file " + this.configFile, e);
@@ -238,7 +256,7 @@ public class ConfigMojo extends AbstractMojo {
       if (defaultConfig.exists()) {
         getLog().info(defaultConfig.getAbsolutePath() + " exists, so it will be used.");
         try {
-          config.load(defaultConfig);
+          loadConfig(config, defaultConfig);
         }
         catch (Exception e) {
           throw new MojoExecutionException("Problem with enunciate config file " + defaultConfig, e);
@@ -330,6 +348,25 @@ public class ConfigMojo extends AbstractMojo {
   }
 
   /**
+   * Load the config, do filtering as needed.
+   *
+   * @param config     The config to load into.
+   * @param configFile The config file.
+   */
+  protected void loadConfig(EnunciateConfiguration config, File configFile) throws IOException, SAXException, MavenFilteringException {
+    if (this.configFilter == null) {
+      getLog().info("No maven file filter was provided, so no filtering of the config file will be done.");
+      config.load(configFile);
+    }
+    else {
+      File filteredConfig = File.createTempFile("enunciateConfig", ".xml");
+      getLog().info("Filtering " + configFile + " to " + filteredConfig + "...");
+      this.configFilter.copyFile(configFile, filteredConfig, true, this.project, null, true, "utf-8", this.session);
+      config.load(filteredConfig);
+    }
+  }
+
+  /**
    * Whether the given source directory is Enunciate-generated.
    *
    * @param sourceDir The source directory.
@@ -388,8 +425,7 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     public void loadMavenConfiguration() throws IOException {
-      List<DeploymentModule> modules = getConfig().getEnabledModules();
-      for (DeploymentModule module : modules) {
+      for (DeploymentModule module : getConfig().getAllModules()) {
         if (!module.isDisabled()) {
           if (module instanceof GWTDeploymentModule) {
             configureGWTDeploymentModule((GWTDeploymentModule) module);
@@ -414,7 +450,7 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     @Override
-    protected void initModules(List<DeploymentModule> modules) throws EnunciateException, IOException {
+    protected void initModules(Collection<DeploymentModule> modules) throws EnunciateException, IOException {
       super.initModules(modules);
 
       for (DeploymentModule module : modules) {
@@ -430,10 +466,10 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     @Override
-    protected void doGenerate(List<DeploymentModule> modules) throws IOException, EnunciateException {
-      super.doGenerate(modules);
+    protected void doGenerate() throws IOException, EnunciateException {
+      super.doGenerate();
 
-      for (DeploymentModule module : modules) {
+      for (DeploymentModule module : getConfig().getAllModules()) {
         if (!module.isDisabled()) {
           if (module instanceof GWTDeploymentModule) {
             afterGWTGenerate((GWTDeploymentModule) module);
@@ -537,8 +573,8 @@ public class ConfigMojo extends AbstractMojo {
     }
 
     @Override
-    protected void doClose(List<DeploymentModule> list) throws EnunciateException, IOException {
-      super.doClose(list);
+    protected void doClose() throws EnunciateException, IOException {
+      super.doClose();
 
       if (warArtifactId != null) {
         org.codehaus.enunciate.main.Artifact warArtifact = null;
