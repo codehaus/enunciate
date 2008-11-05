@@ -167,7 +167,7 @@ public class EnunciateAnnotationProcessor extends FreemarkerProcessor {
       }
     }
 
-    if (!config.getApiIncludePatterns().isEmpty()) {
+    if (!config.getApiExcludePatterns().isEmpty()) {
       Iterator<TypeDeclaration> typeDeclarationIt = typeDeclarations.iterator();
       while (typeDeclarationIt.hasNext()) {
         TypeDeclaration typeDeclaration = typeDeclarationIt.next();
