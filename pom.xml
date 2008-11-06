@@ -3,7 +3,7 @@
   <groupId>org.codehaus.enunciate</groupId>
   <artifactId>enunciate-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.8.1-SNAPSHOT</version>
+  <version>1.8.1</version>
   <name>Enunciate - Parent</name>
 
   <modules>
@@ -110,9 +110,9 @@
   </reporting>
 
   <scm>
-    <connection>scm:svn:https://svn.codehaus.org/enunciate/tags/1.8.1</connection>
-    <developerConnection>scm:svn:https://svn.codehaus.org/enunciate/tags/1.8.1</developerConnection>
-    <url>https://svn.codehaus.org/enunciate/tags/1.8.1</url>
+    <connection>scm:svn:https://svn.codehaus.org/enunciate/tags/enunciate-parent-1.8.1</connection>
+    <developerConnection>scm:svn:https://svn.codehaus.org/enunciate/tags/enunciate-parent-1.8.1</developerConnection>
+    <url>https://svn.codehaus.org/enunciate/tags/enunciate-parent-1.8.1</url>
   </scm>
 
   <dependencies>
