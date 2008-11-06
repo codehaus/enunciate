@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<enunciate xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.8.xsd">
+
+  <api-classes>
+    <include pattern="org.jboss.seam.example.messages.Message"/>
+    <include pattern="org.jboss.seam.example.messages.MessageService"/>
+  </api-classes>
+
+  <modules>
+    <docs docsDir="api" title="Seam Messages API"/>
+    <spring-app doCompile="false" doPackage="false" doLibCopy="false">
+      <war mergeWebXML="resources/WEB-INF/web.xml"/>
+    </spring-app>
+  </modules>
+
+</enunciate>
