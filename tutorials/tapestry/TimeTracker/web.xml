@@ -27,12 +27,7 @@
 
     <filter-mapping>
         <filter-name>HiveMind Filter</filter-name>
-        <url-pattern>/soap/*</url-pattern>
-    </filter-mapping>
-
-    <filter-mapping>
-        <filter-name>context_filter</filter-name>
-        <url-pattern>/rest/*</url-pattern>
+        <url-pattern>/*</url-pattern>
     </filter-mapping>
 
     <servlet>
