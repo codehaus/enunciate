@@ -27,7 +27,7 @@
   <modules>
     <docs docsDir="api" title="Wicket Example API"/>
     <spring-app>
-      <war mergeWebXML="src/main/webapp/WEB-INF/web.xml"/>
+      <war mergeWebXML="web.xml"/>
       
       <springImport uri="classpath:applicationContext.xml"/>
     </spring-app>
