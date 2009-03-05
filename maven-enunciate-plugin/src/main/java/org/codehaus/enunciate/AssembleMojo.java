@@ -14,7 +14,7 @@ import java.util.Set;
  * For use with the "war" packaging.
  *
  * @goal assemble
- * @phase generate-sources
+ * @phase process-sources
  * @requiresDependencyResolution compile
 
  * @author Ryan Heaton
@@ -37,6 +37,13 @@ public class AssembleMojo extends ConfigMojo {
    */
   private boolean forceWarPackaging = true;
 
+  /**
+   * The target to step to.
+   *
+   * @parameter expression="${enunciate.target}"
+   */
+  private String stepTo = null;
+
   private AssembleOnlyMavenSpecificEnunciate enunciate = null;
 
   @Override
@@ -52,8 +59,14 @@ public class AssembleMojo extends ConfigMojo {
       throw new MojoExecutionException("No stepper found in the project!");
     }
 
+    Enunciate.Target target = Enunciate.Target.PACKAGE;
+
+    if (stepTo != null) {
+      target = Enunciate.Target.valueOf(stepTo.toUpperCase());
+    }
+
     try {
-      stepper.stepTo(Enunciate.Target.PACKAGE);
+      stepper.stepTo(target);
       stepper.close();
     }
     catch (Exception e) {
