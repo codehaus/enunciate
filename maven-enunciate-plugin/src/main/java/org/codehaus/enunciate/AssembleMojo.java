@@ -2,7 +2,8 @@ package org.codehaus.enunciate;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.enunciate.main.Enunciate;
-import org.codehaus.enunciate.modules.spring_app.SpringAppDeploymentModule;
+import org.codehaus.enunciate.modules.DeploymentModule;
+import org.codehaus.enunciate.modules.ProjectAssemblyModule;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,8 +15,9 @@ import java.util.Set;
  * For use with the "war" packaging.
  *
  * @goal assemble
- * @phase generate-sources
+ * @phase process-sources
  * @requiresDependencyResolution compile
+ * @executionStrategy once-per-session
 
  * @author Ryan Heaton
  */
@@ -37,6 +39,13 @@ public class AssembleMojo extends ConfigMojo {
    */
   private boolean forceWarPackaging = true;
 
+  /**
+   * The target to step to.
+   *
+   * @parameter expression="${enunciate.target}"
+   */
+  private String stepTo = null;
+
   private AssembleOnlyMavenSpecificEnunciate enunciate = null;
 
   @Override
@@ -52,8 +61,14 @@ public class AssembleMojo extends ConfigMojo {
       throw new MojoExecutionException("No stepper found in the project!");
     }
 
+    Enunciate.Target target = Enunciate.Target.PACKAGE;
+
+    if (stepTo != null) {
+      target = Enunciate.Target.valueOf(stepTo.toUpperCase());
+    }
+
     try {
-      stepper.stepTo(Enunciate.Target.PACKAGE);
+      stepper.stepTo(target);
       stepper.close();
     }
     catch (Exception e) {
@@ -82,13 +97,18 @@ public class AssembleMojo extends ConfigMojo {
     }
 
     @Override
-    protected void onInitSpringAppDeploymentModule(SpringAppDeploymentModule springAppModule) throws IOException {
-      super.onInitSpringAppDeploymentModule(springAppModule);
+    protected void initModules(Collection<DeploymentModule> modules) throws EnunciateException, IOException {
+      super.initModules(modules);
 
-      springAppModule.setDoCompile(false);
-      springAppModule.setDoLibCopy(false);
-      springAppModule.setDoPackage(false);
-      springAppModule.setBuildDir(new File(project.getBasedir(), webappDirectory));
+      for (DeploymentModule module : modules) {
+        if (module instanceof ProjectAssemblyModule) {
+          ProjectAssemblyModule assemblyModule = (ProjectAssemblyModule) module;
+          assemblyModule.setDoCompile(false);
+          assemblyModule.setDoLibCopy(false);
+          assemblyModule.setDoPackage(false);
+          assemblyModule.setBuildDir(new File(project.getBasedir(), webappDirectory));
+        }
+      }
     }
   }
 }
