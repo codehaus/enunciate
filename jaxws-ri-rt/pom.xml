@@ -1,0 +1,93 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.codehaus.enunciate</groupId>
+    <artifactId>enunciate-parent</artifactId>
+    <version>1.15-RC2</version>
+  </parent>
+
+  <artifactId>enunciate-jaxws-ri-rt</artifactId>
+  <name>Enunciate - JAX-WS Reference Implementation Runtime</name>
+  <description>The Enunciate JAX-WS Reference Implementation runtime libraries support the JAX-WS RI-backed SOAP endpoints.</description>
+
+  <repositories>
+    <repository>
+      <id>java.net.1</id>
+      <url>http://download.java.net/maven/1</url>
+      <layout>legacy</layout>
+    </repository>
+    <repository>
+      <id>java.net.2</id>
+      <url>http://download.java.net/maven/2</url>
+    </repository>
+    <repository>
+      <!--you know something's seriously wrong with sun's maven repositories when we have to go out to the jboss repository to get some of these artifacts.-->
+      <id>jboss.repo</id>
+      <url>http://repository.jboss.org/maven2</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>enunciate-core-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <!-- cglib because the JAX-WS RI invokes the implementation
+          methods on the potentially-advised endpoints -->
+      <groupId>cglib</groupId>
+      <artifactId>cglib-nodep</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jvnet.jax-ws-commons.spring</groupId>
+      <artifactId>jaxws-spring</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jvnet.staxex</groupId>
+      <artifactId>stax-ex</artifactId>
+    </dependency>
+
+    <dependency>
+      <!--this dependency is NOT optional; I guess the spring-->
+      <!--extension for JAX-WS needs it for some reason-->
+      <groupId>com.sun.xml.stream.buffer</groupId>
+      <artifactId>streambuffer</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.xml.stream</groupId>
+      <artifactId>sjsxp</artifactId>
+
+      <!--needed only for MTOM-->
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+
+</project>

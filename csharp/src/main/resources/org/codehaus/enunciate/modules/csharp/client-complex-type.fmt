@@ -1,0 +1,161 @@
+[#ftl]
+[#import "csharp-metadata.fmt" as libCSharpMetadata/]
+[#--template for the client-side complex type.--]
+[#macro writeComplexType type]
+namespace ${namespaceFor(type)} {
+
+  /// <remarks>
+  ///  ${type.javaDoc?default("(no documentation provided)")?chop_linebreak?html?replace("\n", "\n  ///  ")}
+  /// </remarks>
+  /// <summary>
+  ///  ${type.javaDoc?default("(no documentation provided)")?chop_linebreak?html?replace("\n", "\n  ///  ")}
+  /// </summary>
+  [@libCSharpMetadata.writeTypeMetadata typeDef=type /]
+  public [#if type.abstract]abstract [/#if][#if type.final]sealed [/#if]partial class ${simpleNameFor(type)} [#if !type.baseObject]: ${classnameFor(type.superclass, true)} [/#if]{
+
+  [#list type.attributes as attribute]
+    [#if !accessorOverridesAnother(attribute)]
+    private ${classnameFor(attribute)} _${attribute.clientSimpleName};
+      [#if classnameFor(attribute)?ends_with("?")]
+    private bool _${attribute.clientSimpleName}Specified;
+      [/#if]
+    [/#if]
+  [/#list]
+  [#if type.value?exists]
+    [#if !accessorOverridesAnother(type.value)]
+    private ${classnameFor(type.value)} _${type.value.clientSimpleName};
+      [#if classnameFor(type.value)?ends_with("?")]
+    private bool _${type.value.clientSimpleName}Specified;
+      [/#if]
+    [/#if]
+  [#else]
+    [#list type.elements as element]
+      [#if !accessorOverridesAnother(element)]
+    private ${classnameFor(element)} _${element.clientSimpleName};
+        [#if classnameFor(element)?ends_with("?")]
+    private bool _${element.clientSimpleName}Specified;
+        [/#if]
+      [/#if]
+    [/#list]
+  [/#if]
+  [#if type.anyElement?exists]
+    private System.Xml.XmlElement[] _${type.anyElement.clientSimpleName};
+  [/#if]
+  [#if type.hasAnyAttribute]
+    private System.Xml.XmlAttribute[] _otherAttributes;
+  [/#if]
+  [#list type.attributes as attribute]
+    [#if !accessorOverridesAnother(attribute)]
+[@writeAccessorProperty accessor=attribute/]
+    [/#if]
+  [/#list]
+  [#if type.value?exists]
+    [#if !accessorOverridesAnother(type.value)]
+[@writeAccessorProperty accessor=type.value/]
+    [/#if]
+  [#else]
+    [#list type.elements as element]
+      [#if !accessorOverridesAnother(element)]
+[@writeAccessorProperty accessor=element/]
+      [/#if]
+    [/#list]
+  [/#if]
+  [#if type.anyElement?exists]
+
+    /// <summary>
+    ///  ${type.anyElement.javaDoc.return?default(type.anyElement.docValue?default("(no documentation provided)"))?chop_linebreak?html?replace("\n", "\n    ///  ")}
+    /// </summary>
+    [System.Xml.Serialization.XmlAnyElementAttribute()]
+    public System.Xml.XmlElement[] ${type.anyElement.clientSimpleName?cap_first} {
+      get {
+        return this._${type.anyElement.clientSimpleName};
+      }
+      set {
+        this._${type.anyElement.clientSimpleName} = value;
+      }
+    }
+  [/#if]
+  [#if type.hasAnyAttribute]
+
+    /// <summary>
+    ///  The other attributes
+    /// </summary>
+    [System.Xml.Serialization.XmlAnyAttributeAttribute()]
+    public System.Xml.XmlAttribute[] OtherAttributes {
+      get {
+        return this._otherAttributes;
+      }
+      set {
+        this._otherAttributes = value;
+      }
+    }
+  [/#if]
+  }
+}  
+[/#macro]
+[#macro writeAccessorProperty accessor]
+  [#assign cs_classname=classnameFor(accessor)/]
+  [#if cs_classname?ends_with("?")]
+    /// <summary>
+    ///  ${accessor.javaDoc.return?default(accessor.docValue?default("(no documentation provided)"))?chop_linebreak?html?replace("\n", "\n    ///  ")}
+    /// </summary>
+    [@libCSharpMetadata.writeAccessorMetadata accessor=accessor /]
+    public ${cs_classname?substring(0, cs_classname?length  - 1)} ${accessor.clientSimpleName?cap_first} {
+      get {
+        return this._${accessor.clientSimpleName}.GetValueOrDefault();
+      }
+      set {
+        this._${accessor.clientSimpleName} = value;
+        this._${accessor.clientSimpleName}Specified = true;
+      }
+    }
+
+    /// <summary>
+    ///  Property for the XML serializer indicating whether the "${accessor.clientSimpleName?cap_first}" property should be included in the output.
+    /// </summary>
+    [System.Xml.Serialization.XmlIgnoreAttribute]
+    [System.Xml.Serialization.SoapIgnoreAttribute]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public bool ${accessor.clientSimpleName?cap_first}Specified {
+      get {
+        return this._${accessor.clientSimpleName}Specified;
+      }
+      set {
+        this._${accessor.clientSimpleName}Specified = value;
+      }
+    }
+
+  [#else]
+    /// <summary>
+    ///  ${accessor.javaDoc.return?default(accessor.docValue?default("(no documentation provided)"))?chop_linebreak?html?replace("\n", "\n    ///  ")}
+    /// </summary>
+    [@libCSharpMetadata.writeAccessorMetadata accessor=accessor /]
+    public ${cs_classname} ${accessor.clientSimpleName?cap_first} {
+      get {
+        return this._${accessor.clientSimpleName};
+      }
+      set {
+        this._${accessor.clientSimpleName} = value;
+      }
+    }
+    [#if accessor.accessorType.enum]
+
+    /// <summary>
+    ///  Property for the XML serializer indicating whether the "${accessor.clientSimpleName?cap_first}" property should be included in the output.
+    /// </summary>
+    [System.Xml.Serialization.XmlIgnoreAttribute]
+    [System.Xml.Serialization.SoapIgnoreAttribute]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public bool ${accessor.clientSimpleName?cap_first}Specified {
+      get {
+        return this._${accessor.clientSimpleName} != ${cs_classname}._Unspecified;
+      }
+      set {
+        if (!value) {
+          this._${accessor.clientSimpleName} = ${cs_classname}._Unspecified;
+        }
+      }
+    }
+    [/#if]
+  [/#if]
+[/#macro]
