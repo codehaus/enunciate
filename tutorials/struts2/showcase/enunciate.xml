@@ -23,10 +23,11 @@
     <include pattern="org.apache.struts2.showcase.dao.*Service"/>
   </api-classes>
 
+  <webapp mergeWebXML="web.xml"/>
+
   <modules>
     <docs docsDir="api" title="Struts 2 Example API"/>
     <spring-app>
-      <war mergeWebXML="web.xml"/>
       
       <springImport file="src/main/webapp/WEB-INF/struts-context.xml"/>
     </spring-app>
