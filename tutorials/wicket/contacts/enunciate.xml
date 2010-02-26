@@ -24,11 +24,11 @@
     <include pattern="org.apache.wicket.spring.common.ContactDaoImpl"/>
   </api-classes>
 
+  <webapp mergeWebXML="web.xml"/>
+      
   <modules>
     <docs docsDir="api" title="Wicket Example API"/>
     <spring-app>
-      <war mergeWebXML="web.xml"/>
-      
       <springImport uri="classpath:applicationContext.xml"/>
     </spring-app>
   </modules>
