@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="site" basedir="." xmlns:artifact="urn:maven-artifact-ant">
+
+  <!--global references to other modules-->
+  <property name="lib.dir" value="${basedir}/lib"/>
+  <property name="static.docs.dir" value="${basedir}/documentation"/>
+  <property name="docs.dir" value="${basedir}/target/docs"/>
+  <property name="docs.resources.dir" value="${docs.dir}/resources"/>
+  <property name="javadoc.dir" value="${docs.dir}/api"/>
+  <property name="module.docs.dir" value="${docs.dir}"/>
+  <property name="getting.started.example.dir" value="${docs.dir}/wannabecool"/>
+
+  <target name="clean">
+    <delete dir="target"/>
+  </target>
+
+  <target name="init">
+    <typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant" loaderref="antlib.loader">
+      <classpath>
+        <fileset dir="${lib.dir}/build">
+          <include name="maven-ant-tasks-*.jar"/>
+        </fileset>
+      </classpath>
+    </typedef>
+
+    <artifact:pom id="parent.pom" file="${basedir}/pom.xml"/>
+    <echo message="Current version is: ${parent.pom.version}"/>
+    <property name="dist.name" value="enunciate-${parent.pom.version}"/>
+    <property name="full.sources.jar.name" value="enunciate-full-${parent.pom.version}-sources.jar"/>
+
+    <artifact:pom id="top.pom" file="${basedir}/top/pom.xml"/>
+    <fail message="Top pom version (${top.pom.version}) is not the same as the project pom version (${parent.pom.version}).">
+      <condition>
+        <not>
+          <equals arg1="${top.pom.version}" arg2="${parent.pom.version}"/>
+        </not>
+      </condition>
+    </fail>
+
+    <artifact:dependencies filesetId="core.libs.fileset" pomRefId="top.pom"/>
+
+    <artifact:dependencies filesetId="spring.libs.fileset" pathId="spring.libs.path">
+      <dependency groupId="org.codehaus.enunciate" artifactId="enunciate-spring-app" version="${top.pom.version}"/>
+    </artifact:dependencies>
+
+    <artifact:dependencies filesetId="xfire.libs.fileset" pathId="xfire.libs.path">
+      <dependency groupId="org.codehaus.enunciate" artifactId="enunciate-xfire" version="${top.pom.version}"/>
+      <dependency groupId="org.codehaus.enunciate" artifactId="enunciate-xfire-client" version="${top.pom.version}"/>
+    </artifact:dependencies>
+
+    <artifact:dependencies filesetId="cxf.libs.fileset" pathId="cxf.libs.path">
+      <dependency groupId="org.codehaus.enunciate" artifactId="enunciate-cxf" version="${top.pom.version}"/>
+    </artifact:dependencies>
+
+    <artifact:dependencies filesetId="rest.libs.fileset" pathId="rest.libs.path">
+      <dependency groupId="org.codehaus.enunciate" artifactId="enunciate-rest" version="${top.pom.version}"/>
+    </artifact:dependencies>
+
+    <artifact:dependencies filesetId="gwt.libs.fileset" pathId="gwt.libs.path">
+      <dependency groupId="org.codehaus.enunciate" artifactId="enunciate-gwt" version="${top.pom.version}"/>
+    </artifact:dependencies>
+
+    <artifact:dependencies filesetId="amf.libs.fileset" pathId="amf.libs.path">
+      <dependency groupId="org.codehaus.enunciate" artifactId="enunciate-amf" version="${top.pom.version}"/>
+    </artifact:dependencies>
+
+    <artifact:dependencies sourcesFilesetId="dist.sources.fileset" pathId="dist.libs.path" pomRefId="top.pom"/>
+    <artifact:dependencies pathId="optional.jars.path" filesetId="optional.jars.fileset">
+      <dependency groupId="commons-fileupload" artifactId="commons-fileupload" version="1.2.1"/>
+      <dependency groupId="commons-io" artifactId="commons-io" version="1.3.2"/>
+      <dependency groupId="org.springframework" artifactId="spring-tx" version="2.5.4"/>
+      <dependency groupId="org.springframework.security" artifactId="spring-security-core-tiger" version="2.0.3"/>
+      <dependency groupId="org.springframework.security" artifactId="spring-security-openid" version="2.0.3"/>
+      <dependency groupId="org.codehaus.spring-security-oauth" artifactId="spring-security-oauth" version="2.6"/>
+    </artifact:dependencies>
+    <patternset id="optional.jars.dependencies.patternset">
+      <exclude name="**/commons-fileupload*"/>
+      <exclude name="**/commons-io*"/>
+      <exclude name="**/spring-tx*"/>
+      <exclude name="**/spring-security-*"/>
+    </patternset>
+
+    <!--filters for docs-->
+    <loadfile srcfile="${static.docs.dir}/topnav.include.html" property="topnav"/>
+    <loadfile srcfile="${static.docs.dir}/sidenav.include.html" property="sidenav"/>
+
+    <filterset id="nav.filterset">
+      <filter token="TOPNAV" value="${topnav}"/>
+      <filter token="SIDENAV" value="${sidenav}"/>
+    </filterset>
+  </target>
+
+  <target name="module-docs" depends="init" description="copies over the module documentation to the right place.">
+    <echo>Generating the module documentation...</echo>
+    <mkdir dir="target/module-docs"/>
+    <pathconvert pathsep="&#34; &#34;" dirsep="${file.separator}" property="module.src.file.args">
+      <path>
+        <fileset dir="${basedir}">
+          <include name="**/src/main/java/**/*.java"/>
+          <exclude name="**/samples/**"/>
+          <exclude name="**/integration-tests/**"/>
+          <exclude name="**/integration-test-support/**"/>
+          <exclude name="**/maven-enunciate-*/**"/>
+          <exclude name="**/enunciate-simple-archetype/**"/>
+        </fileset>
+      </path>
+    </pathconvert>
+    <dirname property="apt.output.dir" file="target/module-docs/any.txt"/>
+
+    <path id="module.docs.classpath">
+      <path refid="dist.libs.path"/>
+      <path refid="spring.libs.path"/>
+      <path refid="rest.libs.path"/>
+      <path refid="xfire.libs.path"/>
+      <path refid="cxf.libs.path"/>
+      <path refid="gwt.libs.path"/>
+      <path refid="amf.libs.path"/>
+      <path refid="optional.jars.path"/>
+      <path location="${java.home}/../lib/tools.jar"/>
+      <fileset dir="${ant.home}/lib">
+        <include name="*.jar"/>
+      </fileset>
+    </path>
+
+    <java classname="com.sun.tools.apt.Main" failonerror="true" fork="true">
+      <classpath location="${java.home}/../lib/tools.jar"/>
+      <arg value="-cp"/>
+      <arg pathref="module.docs.classpath"/>
+      <arg value="-s"/>
+      <arg value="${apt.output.dir}"/>
+      <arg value="-nocompile"/>
+      <arg line="-factory net.sf.jelly.apt.freemarker.FreemarkerProcessorFactory"/>
+      <arg value="-Atemplate=${basedir}/build-support/module.docs.fmt"/>
+      <arg line="&#34;${module.src.file.args}&#34;"/>
+    </java>
+  </target>
+
+  <target name="copy-static-docs" depends="module-docs">
+    <echo>Copying XSD files to ${docs.resources.dir}...</echo>
+    <mkdir dir="${docs.resources.dir}"/>
+    <copy todir="${docs.resources.dir}">
+      <fileset dir="core/src">
+        <include name="**/*.xsd"/>
+      </fileset>
+      <mapper type="flatten"/>
+    </copy>
+
+    <echo>Copying static HTML files to ${docs.dir}...</echo>
+    <mkdir dir="${docs.dir}"/>
+    <copy todir="${docs.dir}" overwrite="true">
+      <!--first copy all the html docs (apply the filter).-->
+      <fileset dir="${static.docs.dir}">
+        <include name="**/*.html"/>
+        <exclude name="**/*.include.html"/>
+      </fileset>
+      <fileset dir="target/module-docs"/>
+      <filterset refid="nav.filterset"/>
+    </copy>
+
+    <echo>Copying static non-HTML files to ${docs.dir}...</echo>
+    <copy todir="${docs.dir}" overwrite="true">
+      <!--now copy all the non-html docs except the freemarker templates.-->
+      <fileset dir="${static.docs.dir}">
+        <exclude name="**/*.html"/>
+        <exclude name="**/*.fmt"/>
+      </fileset>
+    </copy>
+
+    <echo>Copying the license file to ${docs.dir}/license.txt...</echo>
+    <copy todir="${docs.dir}" overwrite="true" file="${basedir}/license.txt"/>
+  </target>
+
+  <target name="copy-getting-started-source" depends="init">
+    <taskdef name="java2html" classname="de.java2html.anttasks.Java2HtmlTask">
+      <classpath>
+        <fileset dir="${lib.dir}/build">
+          <include name="**/java2html*.jar"/>
+        </fileset>
+      </classpath>
+    </taskdef>
+
+    <mkdir dir="${getting.started.example.dir}/java_step1"/>
+    <java2html srcdir="src/samples/wannabecool/step1" destdir="${getting.started.example.dir}/java_step1" includes="**/*.java"/>
+    <copy todir="${getting.started.example.dir}/java_step1" overwrite="true">
+      <fileset dir="src/samples/wannabecool/step1/">
+        <exclude name="**/*.java"/>
+      </fileset>
+    </copy>
+
+    <mkdir dir="${getting.started.example.dir}/java_step4"/>
+    <java2html srcdir="src/samples/wannabecool/step4" destdir="${getting.started.example.dir}/java_step4" includes="**/*.java"/>
+    <copy todir="${getting.started.example.dir}/java_step4" overwrite="true">
+      <fileset dir="src/samples/wannabecool/step4/">
+        <exclude name="**/*.java"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="getting-started-examples" depends="copy-getting-started-source" description="Generated the getting started examples.">
+    <taskdef name="enunciate" classname="org.codehaus.enunciate.main.EnunciateTask">
+      <classpath refid="dist.libs.path"/>
+    </taskdef>
+
+    <mkdir dir="${getting.started.example.dir}/step1"/>
+    <echo message="Generating the step1 examples...."/>
+    <enunciate target="build" basedir="src/samples/wannabecool/step1">
+      <include name="**/*.java"/>
+      <classpath refid="dist.libs.path"/>
+      <export artifactId="docs" destination="${getting.started.example.dir}/step1"/>
+    </enunciate>
+
+    <mkdir dir="${getting.started.example.dir}/step4"/>
+    <echo message="Generating the step4 examples...."/>
+    <copy file="src/samples/wannabecool/step4/LICENSE.txt" todir="${user.dir}" overwrite="true"/>
+    <enunciate target="build" basedir="src/samples/wannabecool/step4" configFile="src/samples/wannabecool/step4/enunciate.xml">
+      <include name="**/*.java"/>
+      <classpath refid="dist.libs.path"/>
+      <export artifactId="docs" destination="${getting.started.example.dir}/step4"/>
+    </enunciate>
+    <delete file="${user.dir}/LICENSE.txt" failonerror="false"/>
+  </target>
+
+  <target name="javadoc" depends="init">
+    <mkdir dir="${javadoc.dir}"/>
+    <echo>Building the Javadocs to ${javadoc.dir}...</echo>
+    <property name="title" value="enunciate-docs"/>
+
+    <javadoc doctitle="enunciate" windowtitle="enunciate" destdir="${javadoc.dir}" author="true" version="true" packagenames="*">
+      <fileset dir="${basedir}">
+        <include name="**/src/main/java/**/*.java"/>
+        <exclude name="**/samples/**"/>
+        <exclude name="**/integration-tests/**"/>
+        <exclude name="**/integration-test-support/**"/>
+        <exclude name="**/maven-enunciate-*/**"/>
+        <exclude name="**/enunciate-simple-archetype/**"/>
+      </fileset>
+
+      <sourcepath>
+        <dirset dir="${basedir}">
+          <include name="**/src/main/resources"/>
+          <exclude name="**/samples/**"/>
+          <exclude name="**/integration-tests/**"/>
+          <exclude name="**/integration-test-support/**"/>
+          <exclude name="**/maven-enunciate-*/**"/>
+          <exclude name="**/enunciate-simple-archetype/**"/>
+        </dirset>
+      </sourcepath>
+
+      <classpath>
+        <path refid="dist.libs.path"/>
+        <path refid="spring.libs.path"/>
+        <path refid="rest.libs.path"/>
+        <path refid="xfire.libs.path"/>
+        <path refid="cxf.libs.path"/>
+        <path refid="gwt.libs.path"/>
+        <path refid="amf.libs.path"/>
+        <pathelement location="${java.home}/../lib/tools.jar"/>
+        <path path="${java.class.path}"/>
+      </classpath>
+
+      <link href="http://java.sun.com/j2se/1.5.0/docs/api" offline="true" packagelistloc="${basedir}/src/javadoc/sdk"/>
+      <link href="http://apt-jelly.sourceforge.net/api" offline="true" packagelistloc="${basedir}/src/javadoc/apt-jelly"/>
+      <link href="http://jakarta.apache.org/commons/digester/commons-digester-1.7/docs/api" offline="true" packagelistloc="${basedir}/src/javadoc/commons-digester"/>
+      <link href="http://static.springframework.org/spring/docs/2.5.x/api" offline="true" packagelistloc="${basedir}/src/javadoc/spring"/>
+      <link href="http://envoisolutions.com/xfire/api" offline="true" packagelistloc="${basedir}/src/javadoc/xfire"/>
+    </javadoc>
+  </target>
+
+  <target name="docs" description="generate documentation and javadoc (global)" depends="copy-static-docs, javadoc, getting-started-examples, schemas"/>
+
+  <target name="full-sources-jar" depends="init" description="Creates the full jar.">
+    <mkdir dir="target/full-sources"/>
+
+    <unzip dest="target/full-sources">
+      <fileset refid="dist.sources.fileset"/>
+      <patternset>
+        <include name="**/org/codehaus/enunciate/**"/>
+      </patternset>
+    </unzip>
+
+    <jar destfile="target/${full.sources.jar.name}" basedir="target/full-sources"/>
+  </target>
+
+  <target name="copy-dist-libs" depends="init">
+    <mkdir dir="target/lib"/>
+    <!--load the maven tasks for handling dependencies-->
+    <copy todir="target/lib">
+      <fileset refid="core.libs.fileset"/>
+      <mapper type="flatten"/>
+    </copy>
+
+    <!--copy the spring module plus deps-->
+    <mkdir dir="target/lib/modules/spring"/>
+    <copy todir="target/lib/modules/spring">
+      <fileset refid="spring.libs.fileset"/>
+      <mapper type="flatten"/>
+    </copy>
+    <delete>
+      <fileset dir="target/lib/modules/spring">
+        <present targetdir="target/lib"/>
+      </fileset>
+    </delete>
+
+    <!--copy the xfire module plus deps-->
+    <mkdir dir="target/lib/modules/xfire"/>
+    <copy todir="target/lib/modules/xfire">
+      <fileset refid="xfire.libs.fileset"/>
+      <mapper type="flatten"/>
+    </copy>
+    <delete>
+      <fileset dir="target/lib/modules/xfire">
+        <present targetdir="target/lib"/>
+      </fileset>
+    </delete>
+
+    <!--copy the cxf module plus deps-->
+    <mkdir dir="target/lib/modules/cxf"/>
+    <copy todir="target/lib/modules/cxf">
+      <fileset refid="cxf.libs.fileset"/>
+      <mapper type="flatten"/>
+    </copy>
+    <delete>
+      <fileset dir="target/lib/modules/cxf">
+        <present targetdir="target/lib"/>
+      </fileset>
+    </delete>
+
+    <!--copy the rest module plus deps-->
+    <mkdir dir="target/lib/modules/rest"/>
+    <copy todir="target/lib/modules/rest">
+      <fileset refid="rest.libs.fileset"/>
+      <mapper type="flatten"/>
+    </copy>
+    <delete>
+      <fileset dir="target/lib/modules/rest">
+        <present targetdir="target/lib"/>
+      </fileset>
+    </delete>
+
+    <!--copy the gwt module plus deps-->
+    <mkdir dir="target/lib/modules/gwt"/>
+    <copy todir="target/lib/modules/gwt">
+      <fileset refid="gwt.libs.fileset"/>
+      <mapper type="flatten"/>
+    </copy>
+    <delete>
+      <fileset dir="target/lib/modules/gwt">
+        <present targetdir="target/lib"/>
+      </fileset>
+    </delete>
+
+    <!--copy the amf module plus deps-->
+    <mkdir dir="target/lib/modules/amf"/>
+    <copy todir="target/lib/modules/amf">
+      <fileset refid="amf.libs.fileset"/>
+      <mapper type="flatten"/>
+    </copy>
+    <delete>
+      <fileset dir="target/lib/modules/amf">
+        <present targetdir="target/lib"/>
+      </fileset>
+    </delete>
+
+    <!--set up the optional third-party libs-->
+    <mkdir dir="target/lib/optional"/>
+    <copy todir="target/lib/optional">
+      <fileset refid="optional.jars.fileset"/>
+      <mapper type="flatten"/>
+    </copy>
+    <delete>
+      <fileset dir="target/lib/optional">
+        <patternset refid="optional.jars.dependencies.patternset"/>
+      </fileset>
+    </delete>
+    <echo file="target/lib/optional/README.txt">
+This directory contains jars that are optional for Enunciate because they support optional features such as security and REST file uploads.
+    </echo>
+  </target>
+
+  <target name="scripts" depends="copy-dist-libs" description="Generates the executable scripts.">
+
+    <path id="script.classpath">
+      <fileset dir="target">
+        <include name="lib/*.jar"/>
+      </fileset>
+    </path>
+
+    <pathconvert property="unix.script.classpath" targetos="unix" refid="script.classpath">
+      <mapper type="regexp" from="/(lib/.*.jar)$$" to="$ENUNCIATE_HOME/\1"/>
+    </pathconvert>
+    <pathconvert property="windows.script.classpath" targetos="windows" refid="script.classpath">
+      <mapper type="regexp" from="/(lib/.*.jar)$$" to="%ENUNCIATE_HOME%\\\1"/>
+    </pathconvert>
+
+    <mkdir dir="target/bin"/>
+    <copy file="src/bin/enunciate.sh" tofile="target/bin/enunciate" overwrite="true">
+      <filterset begintoken="{" endtoken="}">
+        <filter token="UNIX_CLASSPATH" value="${unix.script.classpath}"/>
+      </filterset>
+    </copy>
+    <chmod perm="766" file="target/bin/enunciate"/>
+
+    <copy file="src/bin/enunciate.bat" tofile="target/bin/enunciate.bat" overwrite="true">
+      <filterset begintoken="{" endtoken="}">
+        <filter token="WINDOWS_CLASSPATH" value="${windows.script.classpath}"/>
+      </filterset>
+    </copy>
+
+  </target>
+
+  <target name="schemas" depends="init">
+    <mkdir dir="${docs.dir}/schemas"/>
+    <copy todir="${docs.dir}/schemas">
+      <fileset dir="top/src/main/resources/META-INF">
+        <include name="*.xsd"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="dist" depends="docs, scripts, copy-dist-libs, full-sources-jar" description="Creates the distribution bundle.">
+    <!--create the zip dist.-->
+    <zip destfile="target/${dist.name}.zip">
+      <zipfileset dir="${docs.dir}" prefix="${dist.name}/docs" excludes="*.txt"/>
+      <zipfileset dir="${basedir}" prefix="${dist.name}/docs" includes="license.txt notice.txt"/>
+      <zipfileset dir="target/bin" prefix="${dist.name}/bin"/>
+      <zipfileset dir="target/lib" prefix="${dist.name}/lib"/>
+      <zipfileset dir="." includes="license.txt notice.txt" prefix="${dist.name}"/>
+      <zipfileset dir="target" prefix="${dist.name}" includes="enunciate-full*.jar"/>
+      <zipfileset dir="src/samples/wannabecool/step4" prefix="${dist.name}/samples/wannabecool/src/main/java"/>
+      <zipfileset dir="src/samples/wannabecool/build" prefix="${dist.name}/samples/wannabecool"/>
+      <zipfileset dir="src/samples/petclinic" prefix="${dist.name}/samples/petclinic"/>
+      <zipfileset dir="src/samples/addressbook" prefix="${dist.name}/samples/addressbook"/>
+      <zipfileset dir="src/samples/sparklr" prefix="${dist.name}/samples/sparklr"/>
+    </zip>
+
+    <!--create the tar.gz dist.-->
+    <tar destfile="target/${dist.name}.tar.gz" compression="gzip">
+      <tarfileset dir="${docs.dir}" prefix="${dist.name}/docs" excludes="*.txt"/>
+      <tarfileset dir="${basedir}" prefix="${dist.name}/docs" includes="license.txt notice.txt"/>
+      <tarfileset dir="target/bin" prefix="${dist.name}/bin" mode="766"/>
+      <tarfileset dir="target/lib" prefix="${dist.name}/lib"/>
+      <tarfileset dir="." includes="license.txt notice.txt" prefix="${dist.name}"/>
+      <tarfileset dir="target" prefix="${dist.name}" includes="enunciate-full*.jar"/>
+      <tarfileset dir="src/samples/wannabecool/step4" prefix="${dist.name}/samples/wannabecool/src/main/java"/>
+      <tarfileset dir="src/samples/wannabecool/build" prefix="${dist.name}/samples/wannabecool"/>
+      <tarfileset dir="src/samples/petclinic" prefix="${dist.name}/samples/petclinic"/>
+      <tarfileset dir="src/samples/addressbook" prefix="${dist.name}/samples/addressbook"/>
+      <tarfileset dir="src/samples/sparklr" prefix="${dist.name}/samples/sparklr"/>
+    </tar>
+  </target>
+
+</project>

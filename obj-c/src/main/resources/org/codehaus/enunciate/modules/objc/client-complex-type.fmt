@@ -1,0 +1,1158 @@
+[#ftl]
+
+[#--template for the client-side complex type.--]
+[#macro writeComplexTypeHeader type]
+  [#assign typeName=nameForTypeDefinition(type)/]
+#ifndef DEF_${typeName}_H
+#define DEF_${typeName}_H
+
+/**
+ * ${type.docComment!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+@interface ${typeName} : [#if ((!type.baseObject) && (type.baseType.typeDefinition??))]${nameForTypeDefinition(type.baseType.typeDefinition)}[#else]NSObject[/#if][#if findRootElement(type)??] <EnunciateXML>[/#if]
+{
+  @private
+  [#list type.attributes as attribute]
+    [#if !accessorOverridesAnother(attribute)]
+    ${classnameFor(attribute)} [#if !attribute.accessorType.primitive]*[/#if]_${attribute.clientSimpleName};
+    [/#if]
+  [/#list]
+  [#if type.value??]
+    [#if !accessorOverridesAnother(type.value)]
+    ${classnameFor(type.value)} [#if !type.value.accessorType.primitive]*[/#if]_${type.value.clientSimpleName};
+    [/#if]
+  [#else]
+    [#list type.elements as element]
+      [#if !accessorOverridesAnother(element)]
+    ${classnameFor(element)} [#if !element.accessorType.primitive]*[/#if]_${element.clientSimpleName};
+      [/#if]
+    [/#list]
+  [/#if]
+  [#if type.anyElement??]
+    NSArray *_${type.anyElement.clientSimpleName};
+  [/#if]
+  [#if type.hasAnyAttribute]
+    NSArray *_otherAttributes;
+  [/#if]
+}
+[#list type.attributes as attribute]
+  [#if !accessorOverridesAnother(attribute)]
+
+/**
+ * ${attribute.javaDoc.return!attribute.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (${classnameFor(attribute)}[#if !attribute.accessorType.primitive] *[/#if]) ${attribute.clientSimpleName};
+
+/**
+ * ${attribute.javaDoc.return!attribute.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (void) set${attribute.clientSimpleName?cap_first}: (${classnameFor(attribute)}[#if !attribute.accessorType.primitive] *[/#if]) new${attribute.clientSimpleName?cap_first};
+  [/#if]
+[/#list]
+[#if type.value??]
+  [#if !accessorOverridesAnother(type.value)]
+
+/**
+ * ${type.value.javaDoc.return!type.value.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (${classnameFor(type.value)}[#if !type.value.accessorType.primitive] *[/#if]) ${type.value.clientSimpleName};
+
+/**
+ * ${type.value.javaDoc.return!type.value.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (void) set${type.value.clientSimpleName?cap_first}: (${classnameFor(type.value)}[#if !type.value.accessorType.primitive] *[/#if]) new${type.value.clientSimpleName?cap_first};
+  [/#if]
+[#else]
+  [#list type.elements as element]
+    [#if !accessorOverridesAnother(element)]
+
+/**
+ * ${element.javaDoc.return!element.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (${classnameFor(element)}[#if !element.accessorType.primitive] *[/#if]) ${element.clientSimpleName};
+
+/**
+ * ${element.javaDoc.return!element.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (void) set${element.clientSimpleName?cap_first}: (${classnameFor(element)}[#if !element.accessorType.primitive] *[/#if]) new${element.clientSimpleName?cap_first};
+    [/#if]
+  [/#list]
+[/#if]
+[#if type.anyElement??]
+
+/**
+ * ${type.anyElement.javaDoc.return!type.anyElement.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ *
+ * Contains instances of JAXBBasicXMLNode.
+ */
+- (NSArray *) ${type.anyElement.clientSimpleName};
+
+/**
+ * ${type.anyElement.javaDoc.return!type.anyElement.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ *
+ * Contains instances of JAXBBasicXMLNode.
+ */
+- (void) set${type.anyElement.clientSimpleName?cap_first}: (NSArray *) new${type.anyElement.clientSimpleName?cap_first};
+[/#if]
+[#if type.hasAnyAttribute]
+
+/**
+ * Other attributes applicable to ${typeName}.
+ *
+ * Contains instances of JAXBBasicXMLNode.
+ */
+- (NSArray *) otherAttributes;
+
+/**
+ * Other attributes applicable to ${typeName}.
+ *
+ * Contains instances of JAXBBasicXMLNode.
+ */
+- (void) setOtherAttributes: (NSArray *) otherAttributes;
+[/#if]
+@end /* interface ${typeName} */
+
+#endif /* DEF_${typeName}_H */
+[/#macro]
+
+
+
+[#macro writeComplexTypeImpl type]
+  [#assign typeName=nameForTypeDefinition(type)/]
+#ifndef DEF_${typeName}_M
+#define DEF_${typeName}_M
+
+/**
+ * ${type.docComment!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+@implementation ${typeName}
+[#list type.attributes as attribute]
+  [#if !accessorOverridesAnother(attribute)]
+
+/**
+ * ${attribute.javaDoc.return!attribute.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (${classnameFor(attribute)}[#if !attribute.accessorType.primitive] *[/#if]) ${attribute.clientSimpleName}
+{
+  return _${attribute.clientSimpleName};
+}
+
+/**
+ * ${attribute.javaDoc.return!attribute.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (void) set${attribute.clientSimpleName?cap_first}: (${classnameFor(attribute)}[#if !attribute.accessorType.primitive] *[/#if]) new${attribute.clientSimpleName?cap_first}
+{
+  [#if !attribute.accessorType.primitive]
+    [#if functionIdentifierFor(attribute)??]
+  if (_${attribute.clientSimpleName} != NULL) {
+    free(_${attribute.clientSimpleName});
+  }
+    [#else]
+  [new${attribute.clientSimpleName?cap_first} retain];
+  [_${attribute.clientSimpleName} release];
+    [/#if]
+  [/#if]
+  _${attribute.clientSimpleName} = new${attribute.clientSimpleName?cap_first};
+}
+  [/#if]
+[/#list]
+[#if type.value??]
+  [#if !accessorOverridesAnother(type.value)]
+
+/**
+ * ${type.value.javaDoc.return!type.value.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (${classnameFor(type.value)}[#if !type.value.accessorType.primitive] *[/#if]) ${type.value.clientSimpleName}
+{
+  return _${type.value.clientSimpleName};
+}
+
+/**
+ * ${type.value.javaDoc.return!type.value.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (void) set${type.value.clientSimpleName?cap_first}: (${classnameFor(type.value)}[#if !type.value.accessorType.primitive] *[/#if]) new${type.value.clientSimpleName?cap_first}
+{
+  [#if !type.value.accessorType.primitive]
+    [#if functionIdentifierFor(type.value)??]
+  if (_${type.value.clientSimpleName} != NULL) {
+    free(_${type.value.clientSimpleName});
+  }
+    [#else]
+  [new${type.value.clientSimpleName?cap_first} retain];
+  [_${type.value.clientSimpleName} release];
+    [/#if]
+  [/#if]
+  _${type.value.clientSimpleName} = new${type.value.clientSimpleName?cap_first};
+}
+  [/#if]
+[#else]
+  [#list type.elements as element]
+    [#if !accessorOverridesAnother(element)]
+
+/**
+ * ${element.javaDoc.return!element.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (${classnameFor(element)}[#if !element.accessorType.primitive] *[/#if]) ${element.clientSimpleName}
+{
+  return _${element.clientSimpleName};
+}
+
+/**
+ * ${element.javaDoc.return!element.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ */
+- (void) set${element.clientSimpleName?cap_first}: (${classnameFor(element)}[#if !element.accessorType.primitive] *[/#if]) new${element.clientSimpleName?cap_first}
+{
+  [#if !element.accessorType.primitive]
+    [#if functionIdentifierFor(element)??]
+  if (_${element.clientSimpleName} != NULL) {
+    free(_${element.clientSimpleName});
+  }
+    [#else]
+  [new${element.clientSimpleName?cap_first} retain];
+  [_${element.clientSimpleName} release];
+    [/#if]
+  [/#if]
+  _${element.clientSimpleName} = new${element.clientSimpleName?cap_first};
+}
+    [/#if]
+  [/#list]
+[/#if]
+[#if type.anyElement??]
+
+/**
+ * ${type.anyElement.javaDoc.return!type.anyElement.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ *
+ * Contains instances of JAXBBasicXMLNode.
+ */
+- (NSArray *) ${type.anyElement.clientSimpleName}
+{
+  return _${type.anyElement.clientSimpleName};
+}
+
+/**
+ * ${type.anyElement.javaDoc.return!type.anyElement.docValue!"(no documentation provided)"?chop_linebreak?replace("\n", "\n * ")}
+ *
+ * Contains instances of JAXBBasicXMLNode.
+ */
+- (void) set${type.anyElement.clientSimpleName?cap_first}: (NSArray *) new${type.anyElement.clientSimpleName?cap_first}
+{
+  [new${type.anyElement.clientSimpleName?cap_first} retain];
+  [_${type.anyElement.clientSimpleName} release];
+  _${type.anyElement.clientSimpleName} = new${type.anyElement.clientSimpleName?cap_first};
+}
+[/#if]
+[#if type.hasAnyAttribute]
+
+/**
+ * Other attributes applicable to ${typeName}.
+ *
+ * Contains instances of JAXBBasicXMLNode.
+ */
+- (NSArray *) otherAttributes
+{
+  return _otherAttributes;
+}
+
+/**
+ * Other attributes applicable to ${typeName}.
+ *
+ * Contains instances of JAXBBasicXMLNode.
+ */
+- (void) setOtherAttributes: (NSArray *) otherAttributes
+{
+  [otherAttributes retain];
+  [_otherAttributes release];
+  _otherAttributes = otherAttributes;
+}
+[/#if]
+
+- (void) dealloc
+{
+[#list type.attributes as attribute]
+  [#if !accessorOverridesAnother(attribute)]
+    [#if !attribute.accessorType.primitive]
+      [#if functionIdentifierFor(attribute)??]
+  [self set${attribute.clientSimpleName?cap_first}: NULL];
+      [#else]
+  [self set${attribute.clientSimpleName?cap_first}: nil];
+      [/#if]
+    [/#if]
+  [/#if]
+[/#list]
+[#if type.value??]
+  [#if !accessorOverridesAnother(type.value)]
+    [#if !type.value.accessorType.primitive]
+      [#if functionIdentifierFor(type.value)??]
+  [self set${type.value.clientSimpleName?cap_first}: NULL];
+      [#else]
+  [self set${type.value.clientSimpleName?cap_first}: nil];
+      [/#if]
+    [/#if]
+  [/#if]
+[#else]
+  [#list type.elements as element]
+    [#if !accessorOverridesAnother(element)]
+      [#if !element.accessorType.primitive]
+        [#if functionIdentifierFor(element)??]
+  [self set${element.clientSimpleName?cap_first}: NULL];
+        [#else]
+  [self set${element.clientSimpleName?cap_first}: nil];
+        [/#if]
+      [/#if]
+    [/#if]
+  [/#list]
+[/#if]
+[#if type.anyElement??]
+  [self set${type.anyElement.clientSimpleName?cap_first}: nil];
+[/#if]
+[#if type.hasAnyAttribute]
+  [self setOtherAttributes: nil];
+[/#if]
+  [super dealloc];
+}
+[#if findRootElement(type)??]
+  [#assign rootElement=findRootElement(type)/]
+
+//documentation inherited.
++ (id<EnunciateXML>) readFromXML: (NSData *) xml
+{
+  ${typeName} *_${typeName?uncap_first};
+  xmlTextReaderPtr reader = xmlReaderForMemory([xml bytes], [xml length], NULL, NULL, 0);
+  if (reader == NULL) {
+    [NSException raise: @"XMLReadError"
+                 format: @"Error instantiating an XML reader."];
+    return nil;
+  }
+
+  _${typeName?uncap_first} = (${typeName} *) [${typeName} readXMLElement: reader];
+  xmlFreeTextReader(reader); //free the reader
+  return _${typeName?uncap_first};
+}
+
+//documentation inherited.
+- (NSData *) writeToXML
+{
+  xmlBufferPtr buf;
+  xmlTextWriterPtr writer;
+  int rc;
+  NSData *data;
+
+  buf = xmlBufferCreate();
+  if (buf == NULL) {
+    [NSException raise: @"XMLWriteError"
+                 format: @"Error creating an XML buffer."];
+    return nil;
+  }
+
+  writer = xmlNewTextWriterMemory(buf, 0);
+  if (writer == NULL) {
+    xmlBufferFree(buf);
+    [NSException raise: @"XMLWriteError"
+                 format: @"Error creating an XML writer."];
+    return nil;
+  }
+
+  rc = xmlTextWriterStartDocument(writer, NULL, "utf-8", NULL);
+  if (rc < 0) {
+    xmlFreeTextWriter(writer);
+    xmlBufferFree(buf);
+    [NSException raise: @"XMLWriteError"
+                 format: @"Error writing XML start document."];
+    return nil;
+  }
+
+  NS_DURING
+  {
+    [self writeXMLElement: writer];
+  }
+  NS_HANDLER
+  {
+    xmlFreeTextWriter(writer);
+    xmlBufferFree(buf);
+    [localException raise];
+  }
+  NS_ENDHANDLER
+
+  rc = xmlTextWriterEndDocument(writer);
+  if (rc < 0) {
+    xmlFreeTextWriter(writer);
+    xmlBufferFree(buf);
+    [NSException raise: @"XMLWriteError"
+                 format: @"Error writing XML end document."];
+    return nil;
+  }
+
+  xmlFreeTextWriter(writer);
+  data = [NSData dataWithBytes: buf->content length: buf->use];
+  xmlBufferFree(buf);
+  return data;
+}
+[/#if]
+@end /* implementation ${typeName} */
+
+/**
+ * Internal, private interface for JAXB reading and writing.
+ */
+@interface ${typeName} (JAXB) <JAXBReading, JAXBWriting, JAXBType[#if findRootElement(type)??], JAXBElement[/#if]>
+
+@end /*interface ${typeName} (JAXB)*/
+
+/**
+ * Internal, private implementation for JAXB reading and writing.
+ */
+@implementation ${typeName} (JAXB)
+
+/**
+ * Read an instance of ${typeName} from an XML reader.
+ *
+ * @param reader The reader.
+ * @return An instance of ${typeName} defined by the XML reader.
+ */
++ (id<JAXBType>) readXMLType: (xmlTextReaderPtr) reader
+{
+  ${typeName} *_${typeName?uncap_first} = [[${typeName} alloc] init];
+  NS_DURING
+  {
+    [_${typeName?uncap_first} initWithReader: reader];
+  }
+  NS_HANDLER
+  {
+    [_${typeName?uncap_first} dealloc];
+    _${typeName?uncap_first} = nil;
+    [localException raise];
+  }
+  NS_ENDHANDLER
+
+  [_${typeName?uncap_first} autorelease];
+  return _${typeName?uncap_first};
+}
+
+/**
+ * Initialize this instance of ${typeName} according to
+ * the XML being read from the reader.
+ *
+ * @param reader The reader.
+ */
+- (id) initWithReader: (xmlTextReaderPtr) reader
+{
+  return [super initWithReader: reader];
+}
+
+/**
+ * Write the XML for this instance of ${typeName} to the writer.
+ * Note that since we're only writing the XML type,
+ * No start/end element will be written.
+ *
+ * @param reader The reader.
+ */
+- (void) writeXMLType: (xmlTextWriterPtr) writer
+{
+  [super writeXMLType:writer];
+}
+  [#if findRootElement(type)??]
+    [#assign rootElement=findRootElement(type)/]
+
+/**
+ * Reads a ${typeName} from an XML reader. The element to be read is
+ * "[#if ((rootElement.namespace??) && (rootElement.namespace != ""))]{${rootElement.namespace}}[/#if]${rootElement.name}".
+ *
+ * @param reader The XML reader.
+ * @return The ${typeName}.
+ */
++ (id<JAXBElement>) readXMLElement: (xmlTextReaderPtr) reader {
+  int status;
+  ${typeName} *_${type.clientSimpleName?uncap_first} = nil;
+
+  if (xmlTextReaderNodeType(reader) != XML_READER_TYPE_ELEMENT) {
+    status = xmlTextReaderAdvanceToNextStartOrEndElement(reader);
+    if (status < 1) {
+      [NSException raise: @"XMLReadError"
+                   format: @"Error advancing the reader to start element [#if ((rootElement.namespace??) && (rootElement.namespace != ""))]{${rootElement.namespace}}[/#if]${rootElement.name}."];
+    }
+  }
+
+  if (xmlStrcmp(BAD_CAST "${rootElement.name}", xmlTextReaderConstLocalName(reader)) == 0
+      && [#if ((rootElement.namespace??) && (rootElement.namespace != ""))]xmlStrcmp(BAD_CAST "${rootElement.namespace}", xmlTextReaderConstNamespaceUri(reader)) == 0[#else]xmlTextReaderConstNamespaceUri(reader) == NULL[/#if]) {
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"Attempting to read root element {${rootElement.namespace!""}}${rootElement.name}.");
+#endif
+    _${type.clientSimpleName?uncap_first} = (${typeName} *)[${typeName} readXMLType: reader];
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"Successfully read root element {${rootElement.namespace!""}}${rootElement.name}.");
+#endif
+  }
+  else {
+    if (xmlTextReaderConstNamespaceUri(reader) == NULL) {
+      [NSException raise: @"XMLReadError"
+                   format: @"Unable to read ${typeName}. Expected element [#if ((rootElement.namespace??) && (rootElement.namespace != ""))]{${rootElement.namespace}}[/#if]${rootElement.name}. Current element: {}%s", xmlTextReaderConstLocalName(reader)];
+    }
+    else {
+      [NSException raise: @"XMLReadError"
+                   format: @"Unable to read ${typeName}. Expected element [#if ((rootElement.namespace??) && (rootElement.namespace != ""))]{${rootElement.namespace}}[/#if]${rootElement.name}. Current element: {%s}%s\n", xmlTextReaderConstNamespaceUri(reader), xmlTextReaderConstLocalName(reader)];
+    }
+  }
+
+  return _${type.clientSimpleName?uncap_first};
+}
+
+/**
+ * Writes this ${typeName} to XML under element name "[#if ((rootElement.namespace??) && (rootElement.namespace != ""))]{${rootElement.namespace}}[/#if]${rootElement.name}".
+ * The namespace declarations for the element will be written.
+ *
+ * @param writer The XML writer.
+ * @param _${type.clientSimpleName?uncap_first} The ${type.clientSimpleName} to write.
+ * @return 1 if successful, 0 otherwise.
+ */
+- (void) writeXMLElement: (xmlTextWriterPtr) writer
+{
+  [self writeXMLElement: writer writeNamespaces: YES];
+}
+
+/**
+ * Writes this ${typeName} to an XML writer.
+ *
+ * @param writer The writer.
+ * @param writeNs Whether to write the namespaces for this element to the xml writer.
+ */
+- (void) writeXMLElement: (xmlTextWriterPtr) writer writeNamespaces: (BOOL) writeNs
+{
+  int rc = xmlTextWriterStartElementNS(writer, [#if ((rootElement.namespace??) && (rootElement.namespace != ""))]BAD_CAST "${prefix(rootElement.namespace)}"[#else]NULL[/#if], BAD_CAST "${rootElement.name}", NULL);
+  if (rc < 0) {
+    [NSException raise: @"XMLWriteError"
+                 format: @"Error writing start element {${rootElement.namespace!""}}${rootElement.name}. XML writer status: %i\n", rc];
+  }
+    [#assign localReferencedNamespaces=referencedNamespaces(rootElement)/]
+    [#if localReferencedNamespaces?size > 0]
+
+  if (writeNs) {
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"writing namespaces for start element {${rootElement.namespace!""}}${rootElement.name}...");
+#endif
+      [#list localReferencedNamespaces as referencedNamespace]
+        [#if ((referencedNamespace??) && (referencedNamespace?length > 0))]
+
+    rc = xmlTextWriterWriteAttribute(writer, BAD_CAST "xmlns:${prefix(referencedNamespace)}", BAD_CAST "${referencedNamespace}");
+    if (rc < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing attribute 'xmlns:${prefix(referencedNamespace)}' on '{${rootElement.namespace!""}}${rootElement.name}'. XML writer status: %i\n", rc];
+    }
+       [/#if]
+     [/#list]
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"successfully wrote namespaces for start element {${rootElement.namespace!""}}${rootElement.name}...");
+#endif
+  }
+    [/#if]
+
+#if DEBUG_ENUNCIATE > 1
+  NSLog(@"writing type {${type.qname.namespaceURI}}${type.qname.localPart} for root element {${rootElement.namespace!""}}${rootElement.name}...");
+#endif
+  [self writeXMLType: writer];
+#if DEBUG_ENUNCIATE > 1
+  NSLog(@"successfully wrote type {${type.qname.namespaceURI}}${type.qname.localPart} for root element {${rootElement.namespace!""}}${rootElement.name}...");
+#endif
+  rc = xmlTextWriterEndElement(writer);
+  if (rc < 0) {
+    [NSException raise: @"XMLWriteError"
+                 format: @"Error writing end element {${rootElement.namespace!""}}${rootElement.name}. XML writer status: %i\n", rc];
+  }
+}
+  [/#if]
+
+//documentation inherited.
+- (BOOL) readJAXBAttribute: (xmlTextReaderPtr) reader
+{
+  void *_child_accessor;
+
+  if ([super readJAXBAttribute: reader]) {
+    return YES;
+  }
+  [#list type.attributes as attribute]
+    [#if !accessorOverridesAnother(attribute)]
+
+  if ((xmlStrcmp(BAD_CAST "${attribute.name}", xmlTextReaderConstLocalName(reader)) == 0) && ([#if ((attribute.namespace??) && (attribute.namespace != ""))]xmlStrcmp(BAD_CAST "${attribute.namespace}", xmlTextReaderConstNamespaceUri(reader)) == 0[#else]xmlTextReaderConstNamespaceUri(reader) == NULL[/#if])) {
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"Attempting to read attribute {${attribute.namespace!""}}${attribute.name}...");
+#endif
+    [#if functionIdentifierFor(attribute)??]
+    _child_accessor = xmlTextReaderRead${functionIdentifierFor(attribute)}Type(reader);
+    if (_child_accessor == NULL) {
+      //panic: unable to read the attribute value for some reason.
+      [self dealloc];
+      [NSException raise: @"XMLReadError"
+                   format: @"Error reading attribute {${attribute.namespace!""}}${attribute.name}."];
+    }
+    [self set${attribute.clientSimpleName?cap_first}: [#if attribute.accessorType.primitive]*[/#if]((${classnameFor(attribute)}*) _child_accessor)];
+      [#if attribute.accessorType.primitive]
+    free(_child_accessor);
+      [/#if]
+    [#else]
+    [self set${attribute.clientSimpleName?cap_first}: (${classnameFor(attribute)}*) [${classnameFor(attribute)} readXMLType: reader]];
+    [/#if]
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"successfully read attribute {${attribute.namespace!""}}${attribute.name}...");
+#endif
+    return YES;
+  }
+    [/#if]
+  [/#list]
+
+  return NO;
+}
+[#if type.value??]
+  [#if !accessorOverridesAnother(type.value)]
+
+//documentation inherited.
+- (BOOL) readJAXBValue: (xmlTextReaderPtr) reader
+{
+    [#if functionIdentifierFor(type.value)??]
+  void *_child_accessor;
+    [/#if]
+
+#if DEBUG_ENUNCIATE > 1
+  NSLog(@"Attempting to read element value...");
+#endif
+  if (xmlTextReaderIsEmptyElement(reader) == 0) {
+    [#if functionIdentifierFor(type.value)??]
+    _child_accessor = xmlTextReaderRead${functionIdentifierFor(type.value)?cap_first}Type(reader);
+    if (_child_accessor == NULL) {
+      //panic: unable to return the value for some reason.
+      [self dealloc];
+      [NSException raise: @"XMLReadError"
+                   format: @"Error reading element value."];
+    }
+    [self set${type.value.clientSimpleName?cap_first}: [#if type.value.accessorType.primitive]*[/#if]((${classnameFor(type.value)}*) _child_accessor)];
+      [#if type.value.accessorType.primitive]
+    free(_child_accessor);
+      [/#if]
+    [#else]
+    [self set${type.value.clientSimpleName?cap_first}: (${classnameFor(type.value)} *) [${classnameFor(type.value)} readXMLType: reader]];
+    [/#if]
+  }
+    [#if type.value.accessorType.isInstanceOf("java.lang.String")]
+  [#--special case for string accessors (empty string)--]
+  else {
+    [self set${type.value.clientSimpleName?cap_first}: @""];
+  }
+    [/#if]
+#if DEBUG_ENUNCIATE > 1
+  NSLog(@"successfully read element value...");
+#endif
+
+  return YES;
+}
+  [/#if]
+
+//documentation inherited.
+- (BOOL) readJAXBChildElement: (xmlTextReaderPtr) reader
+{
+  return [super readJAXBChildElement: reader];
+}
+[#else]
+
+//documentation inherited.
+- (BOOL) readJAXBValue: (xmlTextReaderPtr) reader
+{
+  return [super readJAXBValue: reader];
+}
+
+//documentation inherited.
+- (BOOL) readJAXBChildElement: (xmlTextReaderPtr) reader
+{
+  id __child;
+  void *_child_accessor;
+  int status, depth;
+
+  if ([super readJAXBChildElement: reader]) {
+    return YES;
+  }
+  [#list type.elements as element]
+    [#if !accessorOverridesAnother(element)]
+      [#if functionIdentifierFor(element)??]
+
+  if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT
+    && xmlStrcmp(BAD_CAST "${element.name}", xmlTextReaderConstLocalName(reader)) == 0
+    && [#if ((element.namespace??) && (element.namespace != ""))]xmlStrcmp(BAD_CAST "${element.namespace}", xmlTextReaderConstNamespaceUri(reader)) == 0[#else]xmlTextReaderConstNamespaceUri(reader) == NULL[/#if]) {
+
+    _child_accessor = xmlTextReaderRead${functionIdentifierFor(element)?cap_first}Type(reader);
+    if (_child_accessor == NULL) {
+      //panic: unable to return the value for some reason.
+      [self dealloc];
+      [NSException raise: @"XMLReadError"
+                   format: @"Error reading element value."];
+    }
+    [self set${element.clientSimpleName?cap_first}: [#if element.accessorType.primitive]*[/#if]((${classnameFor(element)}*) _child_accessor)];
+        [#if element.accessorType.primitive]
+    free(_child_accessor);
+        [/#if]
+    return YES;
+  }
+      [#else]
+        [#if element.wrapped]
+  if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT
+    && xmlStrcmp(BAD_CAST "${element.wrapperName}", xmlTextReaderConstLocalName(reader)) == 0
+    && [#if ((element.wrapperNamespace??) && (element.wrapperNamespace != ""))]xmlStrcmp(BAD_CAST "${element.wrapperNamespace}", xmlTextReaderConstNamespaceUri(reader)) == 0[#else]xmlTextReaderConstNamespaceUri(reader) == NULL[/#if]) {
+
+    if (xmlTextReaderIsEmptyElement(reader) == 0) {
+#if DEBUG_ENUNCIATE > 1
+      NSLog(@"Unwrapping wrapper element {${element.wrapperNamespace!""}}${element.wrapperName}...");
+#endif
+      //start wrapper element "{${element.wrapperNamespace!""}}${element.wrapperName}"
+      depth = xmlTextReaderDepth(reader);
+      status = xmlTextReaderAdvanceToNextStartOrEndElement(reader);
+      while (xmlTextReaderDepth(reader) > depth) {
+        if (status < 1) {
+          //panic: XML read error.
+          [self dealloc];
+          [NSException raise: @"XMLReadError"
+                       format: @"Failure to advance to next wrapped child element."];
+        }
+        [/#if]
+        [#list element.choices as choice]
+  if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT
+    && xmlStrcmp(BAD_CAST "${choice.name}", xmlTextReaderConstLocalName(reader)) == 0
+    && [#if ((choice.namespace??) && (choice.namespace != ""))]xmlStrcmp(BAD_CAST "${choice.namespace}", xmlTextReaderConstNamespaceUri(reader)) == 0[#else]xmlTextReaderConstNamespaceUri(reader) == NULL[/#if]) {
+
+          [#if choice.nillable!false]
+    status = 1;
+    if (xmlTextReaderMoveToAttributeNs(reader, BAD_CAST "nil", BAD_CAST "http://www.w3.org/2001/XMLSchema-instance")) {
+      if (xmlStrcmp(BAD_CAST "true", xmlTextReaderConstValue(reader)) == 0) {
+#if DEBUG_ENUNCIATE > 1
+        NSLog(@"Choice {${choice.namespace!""}}${choice.name} was nil according to the xsi:nil attribute.");
+#endif
+            [#if element.collectionType]
+        __child = [NSNull null];
+            [#else]
+        __child = nil;
+            [/#if]
+        status = 0;
+      }
+    }
+
+    xmlTextReaderMoveToElement(reader); //move back to the element
+    if (status) { //if not "nil"...
+          [/#if]
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"Attempting to read choice {${choice.namespace!""}}${choice.name} of [#if choice.ref??]element {${choice.ref.namespaceURI}}${choice.ref.localPart}[#else]type {${choice.baseType.qname.namespaceURI}}${choice.baseType.qname.localPart}[/#if].");
+#endif
+          [#if choice.ref??]
+    __child = [${classnameFor(choice)} readXMLElement: reader];
+          [#elseif choice.collectionType]
+
+            [#if functionIdentifierFor(choice.collectionItemType)??]
+    _child_accessor = xmlTextReaderRead${functionIdentifierFor(choice.collectionItemType)?cap_first}Type(reader);
+    if (_child_accessor == NULL) {
+      //panic: unable to return the value for some reason.
+      [self dealloc];
+      [NSException raise: @"XMLReadError"
+                   format: @"Error reading element value."];
+    }
+    __child = [NSValue value: _child_accessor withObjCType: @encode(${classnameFor(choice.collectionItemType)})];
+            [#else]
+    __child = [${classnameFor(choice.collectionItemType)} readXMLType: reader];
+            [/#if]
+          [#else]
+    __child = [${classnameFor(choice)} readXMLType: reader];
+          [/#if]
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"successfully read choice {${choice.namespace!""}}${choice.name} of [#if choice.ref??]element {${choice.ref.namespaceURI}}${choice.ref.localPart}[#else]type {${choice.baseType.qname.namespaceURI}}${choice.baseType.qname.localPart}[/#if].");
+#endif
+          [#if choice.nillable!false]
+    } //end "if not nil" clause
+    else if (xmlTextReaderIsEmptyElement(reader) == 0) {
+      //if it's not the empty element, skip it because it's nil.
+      xmlTextReaderSkipElement(reader);
+    }
+          [/#if]
+
+          [#if element.collectionType]
+    if ([self ${element.clientSimpleName}]) {
+      [self set${element.clientSimpleName?cap_first}: [[self ${element.clientSimpleName}] arrayByAddingObject: __child]];
+    }
+    else {
+      [self set${element.clientSimpleName?cap_first}: [NSArray arrayWithObject: __child]];
+    }
+          [#else]
+    [self set${element.clientSimpleName?cap_first}: __child];
+          [/#if]
+          [#if element.wrapped]
+    continue; //continue "while in wrapper element" loop
+          [#else]
+    return YES;
+          [/#if]
+  } //end "if choice"
+        [/#list]
+
+        [#if element.wrapped]
+        status = xmlTextReaderAdvanceToNextStartOrEndElement(reader);
+#if DEBUG_ENUNCIATE > 1
+        NSLog(@"successfully unwrapped wrapper element {${element.wrapperNamespace!""}}${element.wrapperName}...");
+#endif
+      } // end "while in wrapper element" loop
+
+      if (status < 1) {
+        //panic: XML read error.
+        [self dealloc];
+        [NSException raise: @"XMLReadError"
+                     format: @"Failure to advance to end wrapper element."];
+      }
+      else {
+        //end wrapper element "{${element.wrapperNamespace!""}}${element.wrapperName}"
+        status = xmlTextReaderAdvanceToNextStartOrEndElement(reader);
+      }
+    } //end "if empty element" clause
+    else {
+          [#if element.wrapperNillable]
+      //we've got an empty wrapper element; see if it's nil.
+      if (xmlTextReaderMoveToAttributeNs(reader, BAD_CAST "nil", BAD_CAST "http://www.w3.org/2001/XMLSchema-instance")) {
+        if (xmlStrcmp(BAD_CAST "true", xmlTextReaderConstValue(reader)) == 0) {
+#if DEBUG_ENUNCIATE > 1
+          NSLog(@"wrapper {${element.wrapperNamespace!""}}${element.wrapperName} was nil according to the xsi:nil attribute.");
+#endif
+          __child = nil;
+        }
+        else {
+          __child = [NSArray array];
+        }
+      }
+      else {
+        __child = [NSArray array];
+      }
+      xmlTextReaderMoveToElement(reader); //move back to the element
+          [#else]
+      __child = [NSArray array];
+          [/#if]
+      [self set${element.clientSimpleName?cap_first}: (NSArray*) __child];
+    }
+
+    return YES;
+  } // end "if wrapper element" clause
+        [/#if]
+      [/#if]
+    [/#if]
+  [/#list]
+
+  return NO;
+}
+[/#if]
+[#if type.anyElement??]
+
+//documentation inherited.
+- (int) readUnknownJAXBChildElement: (xmlTextReaderPtr) reader
+{
+  JAXBBasicXMLNode *node = (JAXBBasicXMLNode *) [JAXBBasicXMLNode readXMLType: reader];
+  if ([self ${type.anyElement.clientSimpleName}]) {
+    [self set${type.anyElement.clientSimpleName?cap_first}: [[self ${type.anyElement.clientSimpleName}] arrayByAddingObject: node]];
+  }
+  else {
+    [self set${type.anyElement.clientSimpleName?cap_first}: [NSArray arrayWithObject: node]];
+  }
+  return 1;
+}
+[#else]
+
+//documentation inherited.
+- (int) readUnknownJAXBChildElement: (xmlTextReaderPtr) reader
+{
+  return [super readUnknownJAXBChildElement: reader];
+}
+[/#if]
+[#if type.hasAnyAttribute]
+
+//documentation inherited.
+- (void) readUnknownJAXBAttribute: (xmlTextReaderPtr) reader
+{
+  JAXBBasicXMLNode *node = (JAXBBasicXMLNode *) [JAXBBasicXMLNode readXMLType: reader];
+  if ([self otherAttributes]) {
+    [self setOtherAttributes: [[self otherAttributes] arrayByAddingObject: node]];
+  }
+  else {
+    [self setOtherAttributes: [NSArray arrayWithObject: node]];
+  }
+}
+[#else]
+
+//documentation inherited.
+- (void) readUnknownJAXBAttribute: (xmlTextReaderPtr) reader
+{
+  [super readUnknownJAXBAttribute: reader];
+}
+[/#if]
+
+//documentation inherited.
+- (void) writeJAXBAttributes: (xmlTextWriterPtr) writer
+{
+  int status;
+[#if type.hasAnyAttribute]
+  JAXBBasicXMLNode *__node;
+  NSEnumerator *__enumerator;
+[/#if]
+
+  [super writeJAXBAttributes: writer];
+
+[#list type.attributes as attribute]
+  [#if !accessorOverridesAnother(attribute)]
+    [#if attribute.accessorType.primitive]
+  if (YES) { //always write the primitive attributes...
+    [#elseif functionIdentifierFor(attribute)??]
+  if ([self ${attribute.clientSimpleName}] != NULL) {
+    [#else]
+  if ([self ${attribute.clientSimpleName}]) {
+    [/#if]
+
+    status = xmlTextWriterStartAttributeNS(writer, [#if ((attribute.namespace??) && (attribute.namespace != ""))]BAD_CAST "${prefix(attribute.namespace)}"[#else]NULL[/#if], BAD_CAST "${attribute.name}", NULL);
+    if (status < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing start attribute {${attribute.namespace!""}}${attribute.name}."];
+    }
+
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"writing attribute {${attribute.namespace!""}}${attribute.name}...");
+#endif
+  [#if functionIdentifierFor(attribute)??]
+    status = xmlTextWriterWrite${functionIdentifierFor(attribute)?cap_first}Type(writer, [#if attribute.accessorType.primitive]&_${attribute.clientSimpleName}[#else][self ${attribute.clientSimpleName}][/#if]);
+    if (status < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing attribute {${attribute.namespace!""}}${attribute.name}."];
+    }
+  [#else]
+    [[self ${attribute.clientSimpleName}] writeXMLType: writer];
+  [/#if]
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"successfully wrote attribute {${attribute.namespace!""}}${attribute.name}...");
+#endif
+
+    status = xmlTextWriterEndAttribute(writer);
+    if (status < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing end attribute {${attribute.namespace!""}}${attribute.name}."];
+    }
+  }
+  [/#if]
+[/#list]
+[#if type.hasAnyAttribute]
+  if ([self otherAttributes]) {
+    __enumerator = [[self otherAttributes] objectEnumerator];
+
+    while ( (__node = (JAXBBasicXMLNode *) [__enumerator nextObject]) ) {
+      status = xmlTextWriterWriteAttributeNS(writer, BAD_CAST [[__node prefix] UTF8String], BAD_CAST [[__node name] UTF8String], BAD_CAST [[__node ns] UTF8String], BAD_CAST [[__node value] UTF8String]);
+      if (status < 0) {
+        [NSException raise: @"XMLWriteError"
+                     format: @"Error writing unknown attribute."];
+      }
+
+    }
+  }
+[/#if]
+}
+
+[#if type.value??]
+//documentation inherited.
+- (void) writeJAXBValue: (xmlTextWriterPtr) writer
+{
+#if DEBUG_ENUNCIATE > 1
+  NSLog(@"writing element value...");
+#endif
+  [#if functionIdentifierFor(type.value)??]
+  if (xmlTextWriterWrite${functionIdentifierFor(type.value)?cap_first}Type(writer, [#if type.value.accessorType.primitive]&_${type.value.clientSimpleName}[#else][self ${type.value.clientSimpleName}][/#if]) < 0) {
+    [NSException raise: @"XMLWriteError"
+                 format: @"Error writing element value."];
+  }
+  [#else]
+  [[self ${type.value.clientSimpleName}] writeXMLType: writer];
+  [/#if]
+#if DEBUG_ENUNCIATE > 1
+  NSLog(@"successfully wrote element value...");
+#endif
+}
+
+/**
+ * Method for writing the child elements.
+ *
+ * @param writer The writer.
+ */
+- (void) writeJAXBChildElements: (xmlTextWriterPtr) writer
+{
+  [super writeJAXBChildElements: writer];
+}
+[#else]
+//documentation inherited.
+- (void) writeJAXBValue: (xmlTextWriterPtr) writer
+{
+  [super writeJAXBValue: writer];
+}
+
+/**
+ * Method for writing the child elements.
+ *
+ * @param writer The writer.
+ */
+- (void) writeJAXBChildElements: (xmlTextWriterPtr) writer
+{
+  int status;
+  id __item;
+  NSEnumerator *__enumerator;
+
+  [super writeJAXBChildElements: writer];
+
+  [#list type.elements as element]
+    [#if !accessorOverridesAnother(element)]
+      [#if functionIdentifierFor(element)??]
+        [#if element.accessorType.primitive]
+  if (YES) { //always write the primitive element...
+        [#else]
+  if ([self ${element.clientSimpleName}] != NULL) {
+        [/#if]
+    status = xmlTextWriterStartElementNS(writer, [#if ((element.namespace??) && (element.namespace != ""))]BAD_CAST "${prefix(element.namespace)}"[#else]NULL[/#if], BAD_CAST "${element.name}", NULL);
+    if (status < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing start child element {${element.namespace!""}}${element.name}."];
+    }
+
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"writing element {${element.namespace!""}}${element.name}...");
+#endif
+    status = xmlTextWriterWrite${functionIdentifierFor(element)?cap_first}Type(writer, [#if element.accessorType.primitive]&_${element.clientSimpleName}[#else][self ${element.clientSimpleName}][/#if]);
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"successfully wrote element {${element.namespace!""}}${element.name}...");
+#endif
+    if (status < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing child element {${element.namespace!""}}${element.name}."];
+    }
+
+    status = xmlTextWriterEndElement(writer);
+    if (status < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing end child element {${element.namespace!""}}${element.name}."];
+    }
+  }
+      [#else]
+  if ([self ${element.clientSimpleName}]) {
+        [#if element.wrapped]
+    status = xmlTextWriterStartElementNS(writer, [#if ((element.wrapperNamespace??) && (element.wrapperNamespace != ""))]BAD_CAST "${prefix(element.wrapperNamespace)}"[#else]NULL[/#if], BAD_CAST "${element.wrapperName}", NULL);
+    if (status < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing start wrapper element {${element.wrapperNamespace!""}}${element.wrapperName}."];
+    }
+        [/#if]
+        [#if element.collectionType]
+    __enumerator = [[self ${element.clientSimpleName}] objectEnumerator];
+
+    while ( (__item = [__enumerator nextObject]) ) {
+          [#if element.elementRefs!false]
+      [__item writeXMLElement: writer writeNamespaces: NO];
+          [#elseif element.choices?size > 1]
+            [#list element.choices as choice]
+      if ([__item isMemberOfClass: [${classnameFor(choice)} class]] == YES) {
+        status = xmlTextWriterStartElementNS(writer, [#if ((choice.namespace??) && (choice.namespace != ""))]BAD_CAST "${prefix(choice.namespace)}"[#else]NULL[/#if], BAD_CAST "${choice.name}", NULL);
+        if (status < 0) {
+          [NSException raise: @"XMLWriteError"
+                       format: @"Error writing start child element {${choice.namespace!""}}${choice.name}."];
+        }
+
+#if DEBUG_ENUNCIATE > 1
+        NSLog(@"writing element choice {${choice.namespace!""}}${choice.name}...");
+#endif
+              [#if functionIdentifierFor(choice)??]
+        status = xmlTextWriterWrite${functionIdentifierFor(choice)?cap_first}Type(writer, ((${classnameFor(choice)}*) [((NSValue *)__item) pointerValue]));
+        if (status < 0) {
+          [NSException raise: @"XMLWriteError"
+                       format: @"Error writing child element {${choice.namespace!""}}${choice.name}."];
+        }
+              [#else]
+        [__item writeXMLType: writer];
+              [/#if]
+#if DEBUG_ENUNCIATE > 1
+        NSLog(@"successfully wrote element choice {${choice.namespace!""}}${choice.name}...");
+#endif
+
+        status = xmlTextWriterEndElement(writer);
+        if (status < 0) {
+          [NSException raise: @"XMLWriteError"
+                       format: @"Error writing end child element {${choice.namespace!""}}${choice.name}."];
+        }
+        continue;
+      }
+            [/#list]
+          [#else]
+      status = xmlTextWriterStartElementNS(writer, [#if ((element.namespace??) && (element.namespace != ""))]BAD_CAST "${prefix(element.namespace)}"[#else]NULL[/#if], BAD_CAST "${element.name}", NULL);
+      if (status < 0) {
+        [NSException raise: @"XMLWriteError"
+                     format: @"Error writing start child element {${element.namespace!""}}${element.name}."];
+      }
+
+#if DEBUG_ENUNCIATE > 1
+      NSLog(@"writing element {${element.namespace!""}}${element.name}...");
+#endif
+            [#if functionIdentifierFor(element.collectionItemType)??]
+      status = xmlTextWriterWrite${functionIdentifierFor(element.collectionItemType)?cap_first}Type(writer, ((${classnameFor(element.collectionItemType)}*) [((NSValue *)__item) pointerValue]));
+      if (status < 0) {
+        [NSException raise: @"XMLWriteError"
+                     format: @"Error writing child element {${element.namespace!""}}${element.name}."];
+      }
+            [#else]
+      [__item writeXMLType: writer];
+            [/#if]
+#if DEBUG_ENUNCIATE > 1
+      NSLog(@"successfully wrote element {${element.namespace!""}}${element.name}...");
+#endif
+
+      status = xmlTextWriterEndElement(writer);
+      if (status < 0) {
+        [NSException raise: @"XMLWriteError"
+                     format: @"Error writing end child element {${element.namespace!""}}${element.name}."];
+      }
+          [/#if]
+    } //end item iterator.
+        [#elseif element.ref??]
+    [[self ${element.clientSimpleName}] writeXMLElement: writer writeNamespaces: NO];
+        [#else]
+    status = xmlTextWriterStartElementNS(writer, [#if ((element.namespace??) && (element.namespace != ""))]BAD_CAST "${prefix(element.namespace)}"[#else]NULL[/#if], BAD_CAST "${element.name}", NULL);
+    if (status < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing start child element {${element.namespace!""}}${element.name}."];
+    }
+
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"writing element {${element.namespace!""}}${element.name}...");
+#endif
+    [[self ${element.clientSimpleName}] writeXMLType: writer];
+#if DEBUG_ENUNCIATE > 1
+    NSLog(@"successfully wrote element {${element.namespace!""}}${element.name}...");
+#endif
+
+    status = xmlTextWriterEndElement(writer);
+    if (status < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing end child element {${element.namespace!""}}${element.name}."];
+    }
+        [/#if]
+        [#if element.wrapped]
+
+    status = xmlTextWriterEndElement(writer);
+    if (status < 0) {
+      [NSException raise: @"XMLWriteError"
+                   format: @"Error writing end wrapper element {${element.wrapperNamespace!""}}${element.wrapperName}."];
+    }
+        [/#if]
+  }
+      [/#if]
+      [#if type.anyElement??]
+
+  if ([self ${type.anyElement.clientSimpleName}]) {
+    __enumerator = [[self ${type.anyElement.clientSimpleName}] objectEnumerator];
+
+    while ( (__item = [__enumerator nextObject]) ) {
+      [__item writeXMLElement: writer writeNamespaces: NO];
+    }
+  }
+      [/#if]
+    [/#if]
+  [/#list]
+}
+[/#if]
+@end /* implementation ${typeName} (JAXB) */
+
+#endif /* DEF_${typeName}_M */
+[/#macro]

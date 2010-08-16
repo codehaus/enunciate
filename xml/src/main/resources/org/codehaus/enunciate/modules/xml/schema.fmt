@@ -1,0 +1,424 @@
+[#ftl]
+[#--
+ Template library for schema generation.
+--]
+
+[#--
+  The processSchema macro outputs a given schema
+
+  @param schema The schema to output (instance of org.codehaus.enunciate.config.SchemaInfo)
+--]
+[#macro processSchema schema]
+<?xml version="1.0" encoding="UTF-8"?>
+[#-- assign the prefix variable for the schema namespace --]
+[#assign xs=prefix("http://www.w3.org/2001/XMLSchema")]
+<${xs}:schema version="1.0"[#if schema.namespace?exists && schema.namespace?length > 0] targetNamespace="${schema.namespace?default("")}"[/#if]
+  [#if schema.elementFormDefault?exists]elementFormDefault="${schema.elementFormDefault}"[/#if][#t]
+  [#if schema.attributeFormDefault?exists]attributeFormDefault="${schema.attributeFormDefault}"[/#if][#t]
+  [#list schema.referencedNamespaces as referencedNamespace]
+    [#if referencedNamespace?exists && referencedNamespace?length > 0 && !("http://www.w3.org/2001/XMLSchema" = referencedNamespace)]
+  xmlns:${prefix(referencedNamespace)}="${referencedNamespace}"
+    [/#if]
+  [/#list]
+  [#if schema.jaxbBindingVersion?exists]jxb:version="${schema.jaxbBindingVersion}" xmlns:jxb="http://java.sun.com/xml/ns/jaxb"[/#if]
+  xmlns:${xs}="http://www.w3.org/2001/XMLSchema">
+  [#if schema.doc?exists || schema.appinfo?exists]
+  <${xs}:annotation>
+    [#if schema.doc?exists]
+    <${xs}:documentation>
+     <![CDATA[${schema.doc?trim}]]>
+    </${xs}:documentation>
+    [/#if]
+    [#if schema.appinfo?exists]
+    <${xs}:appinfo>
+      ${schema.appinfo}
+    </${xs}:appinfo>
+    [/#if]
+  </${xs}:annotation>
+  [/#if]
+[#t]
+  [#list schema.importedSchemas as importedSchema]
+  <${xs}:import[#if importedSchema.namespace?exists && importedSchema.namespace?length > 0] namespace="${importedSchema.namespace}"[/#if][#if importedSchema.location?exists] schemaLocation="${importedSchema.location}"[/#if]/>
+  [/#list]
+
+  [@processSchemaBody schema=schema/]
+</${xs}:schema>
+[/#macro]
+
+[#--
+  The processSchemaBody macro outputs the body of a given schema
+
+  @param schema The schema to output (instance of org.codehaus.enunciate.config.SchemaInfo)
+--]
+[#macro processSchemaBody schema]
+[#assign xs=prefix("http://www.w3.org/2001/XMLSchema")]
+[#if schema.namespace?exists]
+  [#assign tns=prefix(schema.namespace)]
+[#else]
+  [#assign tns=""]
+[/#if]
+  [#list schema.globalElements as globalElement]
+    [#if globalElement.typeDefinition.anonymous]
+  <${xs}:element name="${globalElement.name}">
+    [@processTypeDef typeDef=globalElement.typeDefinition/]
+  </${xs}:element>
+    [#else]
+  <${xs}:element name="${globalElement.name}" type="${globalElement.typeDefinition.qname}"/>
+    [/#if]
+  [/#list]
+  [#list schema.localElementDeclarations as localElement]
+    [#if !isDefinedGlobally(localElement)]
+      [#if localElement.substitutionGroupQName?exists]
+  <${xs}:element name="${localElement.name}" substitutionGroup="${localElement.substitutionGroupQName}"[#if localElement.defaultValue?exists] default="${localElement.defaultValue}"[/#if]/>
+      [#elseif localElement.elementXmlType.anonymous && localElement.elementXmlType.typeDefinition??]
+  <${xs}:element name="${localElement.name}">
+    [@processTypeDef typeDef=localElement.elementXmlType.typeDefinition/]
+  </${xs}:element>
+      [#else]
+  <${xs}:element name="${localElement.name}" type="${localElement.elementXmlType.qname}"[#if localElement.defaultValue?exists] default="${localElement.defaultValue}"[/#if]/>
+      [/#if]
+    [/#if]
+  [/#list]
+[#t]
+  [#list schema.typeDefinitions as typeDefinition]
+    [#if !typeDefinition.anonymous]
+      [@processTypeDef typeDef=typeDefinition/]
+    [/#if]
+  [/#list]
+[#t]
+  [#list schema.implicitSchemaElements as implicitElement]
+    [@processImplicitElement implicitElement=implicitElement/]
+  [/#list]
+[#t]
+  [#list schema.implicitSchemaAttributes as implicitAttribute]
+    [@processImplicitAttribute implicitAttribute=implicitAttribute/]
+  [/#list]
+[#t]
+[/#macro]
+
+[#--
+  The "processTypeDef" macro outputs a given type definition.
+
+  @param typeDef the type definition to output (instance of org.codehaus.enunciate.contract.jaxb.TypeDefinition)
+--]
+[#macro processTypeDef typeDef]
+  [#--simple type definition--]
+  [#if typeDef.simple]
+<${xs}:simpleType[#if !typeDef.anonymous] name="${typeDef.name}"[/#if]>
+    [#if typeDef.docValue?exists]
+  <${xs}:annotation>
+    <${xs}:documentation>
+      <![CDATA[${typeDef.docValue}]]>
+    </${xs}:documentation>
+  </${xs}:annotation>
+    [/#if]
+    [#if typeDef.value.xmlList]
+  <${xs}:list itemType="${typeDef.baseType.qname}"/>
+    [#else]
+  <${xs}:restriction base="${typeDef.baseType.qname}"/>
+    [/#if]
+</${xs}:simpleType>
+
+  [#--enum type definition--]
+  [#elseif typeDef.enum]
+<${xs}:simpleType[#if !typeDef.anonymous] name="${typeDef.name}"[/#if]>
+    [#if typeDef.docValue?exists]
+  <${xs}:annotation>
+    <${xs}:documentation>
+      <![CDATA[${typeDef.docValue}]]>
+    </${xs}:documentation>
+  </${xs}:annotation>
+    [/#if]
+  <${xs}:restriction base="${typeDef.baseType.qname}">
+    [#list typeDef.enumValues?values as enumValue]
+    <${xs}:enumeration value="${enumValue}"/> [#--todo: add the java doc comments for these enum values.--]
+    [/#list]
+  </${xs}:restriction>
+</${xs}:simpleType>
+
+  [#--complex type definition--]
+  [#elseif typeDef.complex]
+<${xs}:complexType[#if !typeDef.anonymous] name="${typeDef.name}"[/#if][#if typeDef.final] final="#all"[/#if][#if typeDef.abstract] abstract="true"[/#if]>
+    [#if typeDef.docValue?exists]
+  <${xs}:annotation>
+    <${xs}:documentation>
+      <![CDATA[${typeDef.docValue}]]>
+    </${xs}:documentation>
+  </${xs}:annotation>
+    [/#if]
+    [#--complex type with complex content.--]
+    [#if typeDef.contentType.complex]
+      [#--if it's not implied, we need to declare the extension--]
+      [#if !typeDef.baseObject]
+  <${xs}:complexContent>
+    <${xs}:extension base="${typeDef.baseType.qname}">
+      [/#if]
+      [#if !typeDef.contentType.empty]
+      <${xs}:${typeDef.compositorName}>
+        [#list typeDef.elements as element]
+          [#if !accessorOverridesAnother(element)]
+            [#if element.wrapped]
+        <${xs}:element name="${element.wrapperName}" minOccurs="0">
+              [#if element.docValue?exists]
+          <${xs}:annotation>
+            <${xs}:documentation>
+              <![CDATA[${element.docValue}]]>
+            </${xs}:documentation>
+          </${xs}:annotation>
+              [/#if]
+          <${xs}:complexType>
+            <${xs}:sequence>
+            [/#if]
+            [#if ((element.elementRefs!false) || (element.choices?size > 1))]
+              <${xs}:choice minOccurs="0" maxOccurs="unbounded">
+              [#list element.choices as elementChoice]
+                [#if elementChoice.ref?exists]
+                <${xs}:element ref="${elementChoice.ref}"/>
+                [#elseif elementChoice.baseType.anonymous]
+                <${xs}:element name="${elementChoice.name}">
+                  [@processAnonymousType type=elementChoice.baseType/]
+                </${xs}:element>
+                [#else]
+                <${xs}:element name="${elementChoice.name}" type="${elementChoice.baseType.qname}"/>
+                [/#if]
+              [/#list]
+              </${xs}:choice>
+            [#else]
+              [#if element.ref?exists]
+              <${xs}:element ref="${element.ref}" minOccurs="${element.minOccurs}"[#if "1" != element.maxOccurs] maxOccurs="${element.maxOccurs}"[/#if]>
+                [#if element.docValue?exists]
+              <${xs}:annotation>
+                <${xs}:documentation>
+                  <![CDATA[${element.docValue}]]>
+                </${xs}:documentation>
+              </${xs}:annotation>
+                [/#if]
+              </${xs}:element>
+              [#elseif element.baseType.anonymous]
+              <${xs}:element name="${element.name}" minOccurs="${element.minOccurs}"[#if "1" != element.maxOccurs] maxOccurs="${element.maxOccurs}"[/#if]>
+                [#if element.docValue?exists]
+                <${xs}:annotation>
+                  <${xs}:documentation>
+                    <![CDATA[${element.docValue}]]>
+                  </${xs}:documentation>
+                </${xs}:annotation>
+                [/#if]
+                [@processAnonymousType type=element.baseType/]
+              </${xs}:element>
+              [#elseif element.xmlList]
+              <${xs}:element name="${element.name}" minOccurs="${element.minOccurs}"[#if "1" != element.maxOccurs] maxOccurs="${element.maxOccurs}"[/#if]>
+                [#if element.docValue?exists]
+                <${xs}:annotation>
+                  <${xs}:documentation>
+                    <![CDATA[${element.docValue}]]>
+                  </${xs}:documentation>
+                </${xs}:annotation>
+                [/#if]
+                <${xs}:simpleType>
+                  <${xs}:list itemType="${element.baseType.qname}"/>
+                </${xs}:simpleType>
+              </${xs}:element>
+              [#else]
+              <${xs}:element name="${element.name}" type="${element.baseType.qname}" minOccurs="${element.minOccurs}"[#if "1" != element.maxOccurs] maxOccurs="${element.maxOccurs}"[/#if]>
+                [#if element.docValue?exists]
+                <${xs}:annotation>
+                  <${xs}:documentation>
+                    <![CDATA[${element.docValue}]]>
+                  </${xs}:documentation>
+                </${xs}:annotation>
+                [/#if]
+              </${xs}:element>
+              [/#if]
+            [/#if]
+            [#if element.wrapped]
+            </${xs}:sequence>
+          </${xs}:complexType>
+        </${xs}:element>
+            [/#if]
+          [/#if]
+        [/#list]
+        [#if typeDef.anyElement?exists]
+          [#if typeDef.anyElement.elementRefs?size = 0]
+        <${xs}:any [#if typeDef.anyElement.lax]processContents="lax" [#else]processContents="skip" [/#if]namespace="##other"[#if typeDef.anyElement.collectionType] minOccurs="0" maxOccurs="unbounded"[/#if]/>
+          [#else]
+        <${xs}:choice minOccurs="0" maxOccurs="unbounded">
+            [#list typeDef.anyElement.elementRefs as elementRef]
+          <${xs}:element ref="${elementRef.ref}"/>
+            [/#list]
+          <${xs}:any [#if typeDef.anyElement.lax]processContents="lax" [#else]processContents="skip" [/#if]namespace="##other"/>
+        </${xs}:choice>
+          [/#if]
+        [/#if]
+      </${xs}:${typeDef.compositorName}>
+      [/#if]
+[#t]
+    [#--complex type with simple content--]
+    [#elseif typeDef.contentType.simple]
+  <${xs}:simpleContent>
+    <${xs}:extension base="${typeDef.baseType.qname}">
+    [/#if]
+[#t]
+    [#--list all the attributes.--]
+    [#list typeDef.attributes as attribute]
+      [#if !accessorOverridesAnother(attribute)]
+        [#if attribute.ref?exists]
+      <${xs}:attribute[#if attribute.required] use="required"[/#if] ref="${attribute.ref}">
+          [#if attribute.docValue?exists]
+        <${xs}:annotation>
+          <${xs}:documentation>
+            <![CDATA[${attribute.docValue}]]>
+          </${xs}:documentation>
+        </${xs}:annotation>
+          [/#if]
+      </${xs}:attribute>
+        [#elseif attribute.baseType.anonymous]
+      <${xs}:attribute name="${attribute.name}"[#if attribute.required] use="required"[/#if]>
+          [#if attribute.docValue?exists]
+        <${xs}:annotation>
+          <${xs}:documentation>
+            <![CDATA[${attribute.docValue}]]>
+          </${xs}:documentation>
+        </${xs}:annotation>
+          [/#if]
+          [@processAnonymousType type=attribute.baseType/]
+      </${xs}:attribute>
+        [#else]
+      <${xs}:attribute name="${attribute.name}"[#if attribute.required] use="required"[/#if] type="${attribute.baseType.qname}">
+          [#if attribute.docValue?exists]
+        <${xs}:annotation>
+          <${xs}:documentation>
+            <![CDATA[${attribute.docValue}]]>
+          </${xs}:documentation>
+        </${xs}:annotation>
+          [/#if]
+      </${xs}:attribute>
+        [/#if]
+      [/#if]
+    [/#list]
+    [#if typeDef.hasAnyAttribute]
+      <${xs}:anyAttribute namespace="##other" processContents="skip"/>
+    [/#if]
+[#t]
+    [#if typeDef.contentType.simple]
+    </${xs}:extension>
+  </${xs}:simpleContent>
+    [#elseif !typeDef.baseObject]
+    </${xs}:extension>
+  </${xs}:complexContent>
+    [/#if]
+</${xs}:complexType>
+
+  [/#if]
+[/#macro]
+[#t]
+[#macro processAnonymousType type]
+  [#if type.map?default(false)]
+    [@processMapType mapType=type/]
+  [#else]
+    [@processTypeDef typeDef=type.typeDefinition/]
+  [/#if]
+[/#macro]
+[#t]
+[#macro processMapType mapType]
+  <${xs}:complexType>
+    <${xs}:sequence>
+      <${xs}:element name="entry" minOccurs="0" maxOccurs="unbounded">
+        <${xs}:complexType>
+          <${xs}:sequence>
+            [#if mapType.keyType.anonymous]
+            <${xs}:element name="key" minOccurs="1">
+              [@processAnonymousType type=mapType.keyType/]
+            </${xs}:element>
+            [#else]
+            <${xs}:element name="key" minOccurs="1" type="${mapType.keyType.qname}"/>
+            [/#if]
+            [#if mapType.valueType.anonymous]
+            <${xs}:element name="value" minOccurs="1">
+              [@processAnonymousType type=mapType.valueType/]
+            </${xs}:element>
+            [#else]
+            <${xs}:element name="value" minOccurs="1" type="${mapType.valueType.qname}"/>
+            [/#if]
+          </${xs}:sequence>
+        </${xs}:complexType>
+      </${xs}:element>
+    </${xs}:sequence>
+  </${xs}:complexType>
+[/#macro]
+[#t]
+[#macro processImplicitElement implicitElement]
+  [#if implicitElement.typeQName?exists]
+<${xs}:element name="${implicitElement.elementName}" type="${implicitElement.typeQName}">
+    [#if implicitElement.elementDocs?exists]
+  <${xs}:annotation>
+    <${xs}:documentation>
+      <![CDATA[${implicitElement.elementDocs?trim}]]>
+    </${xs}:documentation>
+  </${xs}:annotation>
+    [/#if]
+</${xs}:element>
+  [#elseif implicitElement.anonymousTypeDefinition?exists]
+<${xs}:element name="${implicitElement.elementName}">
+    [#if implicitElement.elementDocs?exists]
+  <${xs}:annotation>
+    <${xs}:documentation>
+      <![CDATA[${implicitElement.elementDocs?trim}]]>
+    </${xs}:documentation>
+  </${xs}:annotation>
+    [/#if]
+  [@processTypeDef typeDef=implicitElement.anonymousTypeDefinition/]
+</${xs}:element>
+  [#else]
+    [#assign childElements=implicitElement.childElements]
+<${xs}:element name="${implicitElement.elementName}" type="[#if tns != ""]${tns}:[/#if]${implicitElement.elementName}"/>
+<${xs}:complexType name="${implicitElement.elementName}">
+    [#if implicitElement.elementDocs?exists]
+  <${xs}:annotation>
+    <${xs}:documentation>
+      <![CDATA[${implicitElement.elementDocs?trim}]]>
+    </${xs}:documentation>
+  </${xs}:annotation>
+    [/#if]
+  <${xs}:sequence>
+      [#list childElements as childElement]
+    <${xs}:element name="${childElement.elementName}"[#if !childElement.xmlType.anonymous] type="${childElement.typeQName}"[/#if] minOccurs="${childElement.minOccurs}"[#if "1" != childElement.maxOccurs] maxOccurs="${childElement.maxOccurs}"[/#if]>
+        [#if childElement.elementDocs?exists]
+      <${xs}:annotation>
+        <${xs}:documentation>
+          <![CDATA[${childElement.elementDocs?trim}]]>
+        </${xs}:documentation>
+      </${xs}:annotation>
+        [/#if]
+        [#if childElement.xmlType.anonymous]
+          [@processAnonymousType type=childElement.xmlType/]
+        [/#if]
+    </${xs}:element>
+      [/#list]
+  </${xs}:sequence>
+</${xs}:complexType>
+  [/#if]
+[/#macro]
+[#macro processImplicitAttribute implicitAttribute]
+ [#if implicitAttribute.anonymousTypeDefinition?exists]
+<${xs}:attribute name="${implicitAttribute.attributeName}">
+    [#if implicitAttribute.attributeDocs?exists]
+  <${xs}:annotation>
+    <${xs}:documentation>
+      <![CDATA[${implicitAttribute.attributeDocs?trim}]]>
+    </${xs}:documentation>
+  </${xs}:annotation>
+    [/#if]
+  [@processTypeDef typeDef=implicitAttribute.anonymousTypeDefinition/]
+</${xs}:attribute>
+ [#else]
+<${xs}:attribute name="${implicitAttribute.attributeName}" type="${implicitAttribute.typeQName}">
+    [#if implicitAttribute.attributeDocs?exists]
+  <${xs}:annotation>
+    <${xs}:documentation>
+      <![CDATA[${implicitAttribute.attributeDocs?trim}]]>
+    </${xs}:documentation>
+  </${xs}:annotation>
+    [/#if]
+</${xs}:attribute>
+ [/#if]
+[/#macro]
