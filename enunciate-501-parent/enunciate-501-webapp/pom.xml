@@ -19,9 +19,21 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>enunciate-501-reactor-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>go</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.enunciate</groupId>
         <artifactId>maven-enunciate-plugin</artifactId>
-        <version>1.22-SNAPSHOT</version>
+        <version>1.21.1</version>
         <executions>
           <execution>
             <id>assemble</id>
@@ -47,7 +59,7 @@
     <dependency>
       <groupId>org.codehaus.enunciate</groupId>
       <artifactId>enunciate-rt</artifactId>
-      <version>1.22-SNAPSHOT</version>
+      <version>1.21.1</version>
     </dependency>
   </dependencies>
 </project>
