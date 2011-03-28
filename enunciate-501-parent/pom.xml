@@ -17,7 +17,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.1</version>
+        <version>2.2-SNAPSHOT</version>
         <configuration>
           <!--for testing out the release plugin-->
           <tagBase>https://svn.codehaus.org/enunciate/tags/</tagBase>
